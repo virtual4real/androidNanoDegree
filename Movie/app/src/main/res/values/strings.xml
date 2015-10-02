@@ -2,4 +2,12 @@
     <string name="app_name">MovieManager</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+
+
+    <!-- SyncAdapter related -->
+    <string name="sync_account_type">moviemanager.virtual4real.com</string>
+    <string name="content_authority">com.virtual4real.moviemanager.app</string>
+
+
+    <string name="api_url">"http://api.themoviedb.org/3"</string>
 </resources>

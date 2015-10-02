@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.virtual4real.moviemanager.sync.MovieManagerSyncAdapter;
+
 public class MovieSummaryActivity extends AppCompatActivity {
 
     @Override
@@ -30,6 +32,7 @@ public class MovieSummaryActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            MovieManagerSyncAdapter.syncImmediately(this);
             return true;
         }
 
