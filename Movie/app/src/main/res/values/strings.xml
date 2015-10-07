@@ -1,6 +1,5 @@
 <resources>
-    <string name="app_name">MovieManager</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="app_name">Movie Manager</string>
     <string name="action_settings">Settings</string>
 
 
@@ -10,4 +9,22 @@
 
 
     <string name="api_url">"http://api.themoviedb.org/3"</string>
+
+    <string name="sort_key">MEMORY_SORT</string>
+    <string name="order_key">MEMORY_ORDER</string>
+    <string name="image_base_key">IMAGE_BASE_URL</string>
+    <string name="backdrop_base_key">BACKDROP_BASE_URL</string>
+
+    <string name="sort_asc">asc</string>
+    <string name="sort_desc">desc</string>
+
+    <string name="order_popular">popularity</string>
+    <string name="order_release">release_date</string>
+    <string name="order_rated">vote_average</string>
+    <string name="order_favorite">favorite</string>
+
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

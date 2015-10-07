@@ -2,11 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.virtual4real.moviemanager">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+
     <application
+        android:name=".MovieManagerApplication"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/moviemanager"
         android:label="@string/app_name"
-        android:name="com.virtual4real.moviemanager.MovieManagerApplication"
         android:theme="@style/AppTheme">
         <activity
             android:name=".MovieSummaryActivity"
@@ -18,10 +23,9 @@
             </intent-filter>
         </activity>
 
-
         <provider
-            android:authorities="@string/content_authority"
             android:name=".data.MovieProvider"
+            android:authorities="@string/content_authority"
             android:exported="false"
             android:syncable="true" />
 
@@ -30,6 +34,7 @@
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
+
             <meta-data
                 android:name="android.accounts.AccountAuthenticator"
                 android:resource="@xml/authenticator" />
@@ -42,16 +47,13 @@
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
+
             <meta-data
                 android:name="android.content.SyncAdapter"
                 android:resource="@xml/syncadapter" />
         </service>
+
+        <activity android:name=".MovieDetailActivity"></activity>
     </application>
-
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
-    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
-    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
-
 
 </manifest>

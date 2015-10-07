@@ -18,7 +18,7 @@ public class MovieOrder extends BaseModel {
     long id;
 
     @Column
-    int dateUpdated;
+    long dateUpdated;
 
     @Column
     @ForeignKey(
@@ -45,11 +45,11 @@ public class MovieOrder extends BaseModel {
         this.id = id;
     }
 
-    public int getDateUpdated() {
+    public long getDateUpdated() {
         return dateUpdated;
     }
 
-    public void setDateUpdated(int dateUpdated) {
+    public void setDateUpdated(long dateUpdated) {
         this.dateUpdated = dateUpdated;
     }
 

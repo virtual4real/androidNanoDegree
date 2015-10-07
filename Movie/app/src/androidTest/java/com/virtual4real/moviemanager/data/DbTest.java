@@ -42,16 +42,6 @@ public class DbTest extends AndroidTestCase {
         url.setDateUpdated(dateUpdated);
         url.setBaseUrl(baseUrl);
         url.setSecureBaseUrl(secureBaseUrl);
-        url.setBackdropSizeMinUrl(backdropMin);
-        url.setBackdropSizeMaxUrl(backdropMax);
-        url.setLogoSizeMinUrl(logoMin);
-        url.setLogoSizeMaxUrl(logoMax);
-        url.setPosterSizeMinUrl(posterMin);
-        url.setPosterSizeMaxUrl(posterMax);
-        url.setProfileSizeMinUrl(profileMin);
-        url.setProfileSizeMaxUrl(profileMax);
-        url.setStillSizeMinUrl(stillMin);
-        url.setStillSizeMaxUrl(stillMax);
         return url;
     }
 
@@ -63,12 +53,6 @@ public class DbTest extends AndroidTestCase {
         assertEquals(dateUpdated, url.getDateUpdated());
         assertEquals(baseUrl, url.getBaseUrl());
         assertEquals(secureBaseUrl, url.getSecureBaseUrl());
-        assertEquals(backdropMin, url.getBackdropSizeMinUrl());
-        assertEquals(backdropMax, url.getBackdropSizeMaxUrl());
-        assertEquals(logoMin, url.getLogoSizeMinUrl());
-        assertEquals(logoMax, url.getLogoSizeMaxUrl());
-        assertEquals(posterMin, url.getPosterSizeMinUrl());
-        assertEquals(posterMax, url.getPosterSizeMaxUrl());
         //assertEquals(profileMin, url.getProfileSizeMinUrl());
         //assertEquals(profileMax, url.getProfileSizeMaxUrl());
         //assertEquals(stillMin, url.getStillSizeMinUrl());

@@ -16,7 +16,7 @@ public class UrlSettings extends BaseModel {
     long id;
 
     @Column
-    int dateUpdated;
+    long dateUpdated;
 
     @Column
     String baseUrl;
@@ -25,34 +25,19 @@ public class UrlSettings extends BaseModel {
     String secureBaseUrl;
 
     @Column
-    String backdropSizeMinUrl;
+    String backdropSizeUrl;
 
     @Column
-    String backdropSizeMaxUrl;
+    String logoSizeUrl;
 
     @Column
-    String logoSizeMinUrl;
+    String posterSizeUrl;
 
     @Column
-    String logoSizeMaxUrl;
+    String profileSizeUrl;
 
     @Column
-    String posterSizeMinUrl;
-
-    @Column
-    String posterSizeMaxUrl;
-
-    @Column
-    String profileSizeMinUrl;
-
-    @Column
-    String profileSizeMaxUrl;
-
-    @Column
-    String stillSizeMinUrl;
-
-    @Column
-    String stillSizeMaxUrl;
+    String stillSizeUrl;
 
     public long getId() {
         return id;
@@ -62,11 +47,11 @@ public class UrlSettings extends BaseModel {
         this.id = id;
     }
 
-    public int getDateUpdated() {
+    public long getDateUpdated() {
         return dateUpdated;
     }
 
-    public void setDateUpdated(int dateUpdated) {
+    public void setDateUpdated(long dateUpdated) {
         this.dateUpdated = dateUpdated;
     }
 
@@ -86,83 +71,47 @@ public class UrlSettings extends BaseModel {
         this.secureBaseUrl = secureBaseUrl;
     }
 
-    public String getBackdropSizeMinUrl() {
-        return backdropSizeMinUrl;
+    public String getBackdropSizeUrl() {
+        return backdropSizeUrl;
     }
 
-    public void setBackdropSizeMinUrl(String backdropSizeMinUrl) {
-        this.backdropSizeMinUrl = backdropSizeMinUrl;
+    public void setBackdropSizeUrl(String backdropSizeMinUrl) {
+        this.backdropSizeUrl = backdropSizeMinUrl;
     }
 
-    public String getBackdropSizeMaxUrl() {
-        return backdropSizeMaxUrl;
+
+    public String getLogoSizeUrl() {
+        return logoSizeUrl;
     }
 
-    public void setBackdropSizeMaxUrl(String backdropSizeMaxUrl) {
-        this.backdropSizeMaxUrl = backdropSizeMaxUrl;
+    public void setLogoSizeUrl(String logoSizeMinUrl) {
+        this.logoSizeUrl = logoSizeMinUrl;
     }
 
-    public String getLogoSizeMinUrl() {
-        return logoSizeMinUrl;
+    public String getPosterSizeUrl() {
+        return posterSizeUrl;
     }
 
-    public void setLogoSizeMinUrl(String logoSizeMinUrl) {
-        this.logoSizeMinUrl = logoSizeMinUrl;
+    public void setPosterSizeUrl(String posterSizeUrl) {
+        this.posterSizeUrl = posterSizeUrl;
     }
 
-    public String getLogoSizeMaxUrl() {
-        return logoSizeMaxUrl;
+
+    public String getProfileSizeUrl() {
+        return profileSizeUrl;
     }
 
-    public void setLogoSizeMaxUrl(String logoSizeMaxUrl) {
-        this.logoSizeMaxUrl = logoSizeMaxUrl;
+    public void setProfileSizeUrl(String profileSizeUrl) {
+        this.profileSizeUrl = profileSizeUrl;
     }
 
-    public String getPosterSizeMinUrl() {
-        return posterSizeMinUrl;
+
+    public String getStillSizeUrl() {
+        return stillSizeUrl;
     }
 
-    public void setPosterSizeMinUrl(String posterSizeMinUrl) {
-        this.posterSizeMinUrl = posterSizeMinUrl;
+    public void setStillSizeUrl(String stillSizeUrl) {
+        this.stillSizeUrl = stillSizeUrl;
     }
 
-    public String getPosterSizeMaxUrl() {
-        return posterSizeMaxUrl;
-    }
-
-    public void setPosterSizeMaxUrl(String posterSizeMaxUrl) {
-        this.posterSizeMaxUrl = posterSizeMaxUrl;
-    }
-
-    public String getProfileSizeMinUrl() {
-        return profileSizeMinUrl;
-    }
-
-    public void setProfileSizeMinUrl(String profileSizeMinUrl) {
-        this.profileSizeMinUrl = profileSizeMinUrl;
-    }
-
-    public String getProfileSizeMaxUrl() {
-        return profileSizeMaxUrl;
-    }
-
-    public void setProfileSizeMaxUrl(String profileSizeMaxUrl) {
-        this.profileSizeMaxUrl = profileSizeMaxUrl;
-    }
-
-    public String getStillSizeMinUrl() {
-        return stillSizeMinUrl;
-    }
-
-    public void setStillSizeMinUrl(String stillSizeMinUrl) {
-        this.stillSizeMinUrl = stillSizeMinUrl;
-    }
-
-    public String getStillSizeMaxUrl() {
-        return stillSizeMaxUrl;
-    }
-
-    public void setStillSizeMaxUrl(String stillSizeMaxUrl) {
-        this.stillSizeMaxUrl = stillSizeMaxUrl;
-    }
 }

@@ -4,9 +4,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 import java.util.List;
 
@@ -16,7 +13,8 @@ import java.util.List;
 
 public abstract class CursorRecyclerViewAdapter<VH extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<VH> {
     protected Context mContext;
-    private Cursor mCursor;
+    protected Cursor mCursor;
+    protected MovieSummaryFragment.Callback mActivity;
     private boolean mDataValid;
     private DataSetObserver mDataSetObserver;
     private int mRowIdColumn;
@@ -24,20 +22,16 @@ public abstract class CursorRecyclerViewAdapter<VH extends RecyclerView.ViewHold
 
     List<MovieSummaryItem> mItems;
 
-    public CursorRecyclerViewAdapter(Context context, Cursor cursor) {
+    public CursorRecyclerViewAdapter(Context context, Cursor cursor, MovieSummaryFragment.Callback activity) {
         mContext = context;
         mCursor = cursor;
+        mActivity = activity;
         mDataValid = cursor != null;
         mRowIdColumn = mDataValid ? mCursor.getColumnIndex("_id") : -1;
         mDataSetObserver = new NotifyingDataSetObserver();
         if (mCursor != null) {
             mCursor.registerDataSetObserver(mDataSetObserver);
         }
-
-//        species = new MovieSummaryItem();
-//        species.setName("Dolphin");
-//        species.setThumbnail(R.drawable.dolph);
-//        mItems.add(species);
     }
 
     public Cursor getCursor() {

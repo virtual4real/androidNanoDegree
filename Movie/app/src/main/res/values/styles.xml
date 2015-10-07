@@ -10,4 +10,10 @@
         <item name="colorPrimaryDark">@color/primary_dark</item>
     </style>
 
+    <style name="movieRatingBar" parent="@android:style/Widget.RatingBar">
+        <item name="android:progressDrawable">@drawable/ratingstars</item>
+        <item name="android:minHeight">19dip</item>
+        <item name="android:maxHeight">19dip</item>
+    </style>
+
 </resources>

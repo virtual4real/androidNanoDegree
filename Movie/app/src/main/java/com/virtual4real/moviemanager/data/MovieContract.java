@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 import android.text.format.Time;
 
+import com.virtual4real.moviemanager.sync.restapi.RestApiContract;
+
 /**
  * Created by ioanagosman on 28/09/15.
  */
@@ -64,18 +66,82 @@ public class MovieContract {
         public static final String MOVIE_SUMMARY_POSITION = "POSITION";
         public static final String SORT_TYPE = "SORTTYPE";
 
+        public static final String SORT_KEY_POPULARITY_ASC = "popularity.asc";
+        public static final String SORT_KEY_POPULARITY_DESC = "popularity.desc";
+        public static final String SORT_KEY_VOTE_ASC = "vote_average.asc";
+        public static final String SORT_KEY_VOTE_DESC = "vote_average.desc";
+        public static final String SORT_KEY_RELEASE_ASC = "release_date.asc";
+        public static final String SORT_KEY_RELEASE_DESC = "release_date.desc";
+
 
         public static Uri buildMovieSummaryUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
-        public static int GetSortTypeInt(String sortType) {
-            if (sortType.equals("popularity.desc")) {
+        public static int getMovieSummaryId(Uri uri) {
+            return Integer.parseInt(uri.getLastPathSegment());
+        }
+
+        public static int GetSortTypeIntFromInterface(String sortType) {
+            if (null == sortType) {
+                return 0;
+            }
+
+            if (sortType.equals(SORT_KEY_POPULARITY_DESC)) {
                 return 1;
             }
 
-            if (sortType.equals("vote_average.desc")) {
+            if (sortType.equals(SORT_KEY_VOTE_DESC)) {
                 return 2;
+            }
+
+            if (sortType.equals(SORT_KEY_POPULARITY_ASC)) {
+                return 3;
+            }
+
+            if (sortType.equals(SORT_KEY_VOTE_ASC)) {
+                return 4;
+            }
+
+            if (sortType.equals(SORT_KEY_RELEASE_ASC)) {
+                return 5;
+            }
+
+            if (sortType.equals(SORT_KEY_RELEASE_DESC)) {
+                return 6;
+            }
+
+            return 0;
+
+        }
+
+        public static int GetSortTypeInt(String sortType) {
+            if (null == sortType) {
+                return 0;
+            }
+
+            if (sortType.equals(RestApiContract.SORT_KEY_POPULARITY_DESC)) {
+                return 1;
+            }
+
+            if (sortType.equals(RestApiContract.SORT_KEY_VOTE_DESC)) {
+                return 2;
+            }
+
+            if (sortType.equals(RestApiContract.SORT_KEY_POPULARITY_ASC)) {
+                return 3;
+            }
+
+            if (sortType.equals(RestApiContract.SORT_KEY_VOTE_ASC)) {
+                return 4;
+            }
+
+            if (sortType.equals(RestApiContract.SORT_KEY_RELEASE_ASC)) {
+                return 5;
+            }
+
+            if (sortType.equals(RestApiContract.SORT_KEY_RELEASE_DESC)) {
+                return 6;
             }
 
             return 0;

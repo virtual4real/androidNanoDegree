@@ -1,18 +1,25 @@
 package com.virtual4real.moviemanager;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.virtual4real.moviemanager.data.MovieContract;
 import com.virtual4real.moviemanager.sync.MovieManagerSyncAdapter;
 
-public class MovieSummaryActivity extends AppCompatActivity {
+public class MovieSummaryActivity extends AppCompatActivity implements MovieSummaryFragment.Callback {
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_summary);
+
+        MovieManagerSyncAdapter.initializeSyncAdapter(this);
     }
 
 
@@ -32,10 +39,22 @@ public class MovieSummaryActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            MovieManagerSyncAdapter.syncImmediately(this);
+            //MovieManagerSyncAdapter.syncImmediately(this);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    public void onItemSelected(Uri dateUri) {
+        Log.d("CALLBACK", dateUri.toString());
+        long nMovieId = MovieContract.MovieSummaryEntry.getMovieSummaryId(dateUri);
+        MovieManagerSyncAdapter.syncImmediately(getApplicationContext(), nMovieId);
+        Intent intent = new Intent(this, MovieDetailActivity.class).setData(dateUri);
+        startActivity(intent);
+    }
+
+
+
 }

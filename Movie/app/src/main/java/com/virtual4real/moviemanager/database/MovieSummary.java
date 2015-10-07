@@ -15,20 +15,19 @@ public class MovieSummary extends BaseModel {
     long id;
 
     @Column
-    int dateUpdated;
+    long dateUpdated;
 
     @Column
     int movieId;
 
     @Column
-    int releaseDate;
+    long releaseDate;
 
     @Column
     double popularity;
 
     @Column
     double voteAverage;
-
 
     @Column
     int voteCount;
@@ -37,10 +36,16 @@ public class MovieSummary extends BaseModel {
     String originalTitle;
 
     @Column
+    String overview;
+
+    @Column
     String title;
 
     @Column
     String posterPath;
+
+    @Column
+    String backdropPath;
 
 
     public long getId() {
@@ -51,11 +56,20 @@ public class MovieSummary extends BaseModel {
     //this.id = id;
     //}
 
-    public int getDateUpdated() {
+
+    public String getOverview() {
+        return overview;
+    }
+
+    public void setOverview(String overview) {
+        this.overview = overview;
+    }
+
+    public long getDateUpdated() {
         return dateUpdated;
     }
 
-    public void setDateUpdated(int dateUpdated) {
+    public void setDateUpdated(long dateUpdated) {
         this.dateUpdated = dateUpdated;
     }
 
@@ -67,11 +81,11 @@ public class MovieSummary extends BaseModel {
         this.movieId = movieId;
     }
 
-    public int getReleaseDate() {
+    public long getReleaseDate() {
         return releaseDate;
     }
 
-    public void setReleaseDate(int releaseDate) {
+    public void setReleaseDate(long releaseDate) {
         this.releaseDate = releaseDate;
     }
 
@@ -122,5 +136,18 @@ public class MovieSummary extends BaseModel {
 
     public void setPosterPath(String posterPath) {
         this.posterPath = posterPath;
+    }
+
+
+    public int getVoteCount() {
+        return voteCount;
+    }
+
+    public String getBackdropPath() {
+        return backdropPath;
+    }
+
+    public void setBackdropPath(String backdropPath) {
+        this.backdropPath = backdropPath;
     }
 }

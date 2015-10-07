@@ -2,37 +2,45 @@ package com.virtual4real.moviemanager;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DataSetObserver;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.virtual4real.moviemanager.data.MovieContract;
 
 /**
  * Created by ioanagosman on 24/09/15.
  */
 public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter.ViewHolder> {
+    private String mBaseImagePath = "";
 
-    public MovieGridAdapter(Context context, Cursor cursor) {
-        super(context, cursor);
+
+    public MovieGridAdapter(Context context, Cursor cursor, MovieSummaryFragment.Callback activity) {
+        super(context, cursor, activity);
+        mBaseImagePath = Utils.getBaseImageUrl(context);
     }
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public ImageView imgThumbnail;
         public TextView tvTitle;
+        public RatingBar rbRating;
+        //TODO: add members for the image URL (maybe define a path in content provider to get this string)
 
         public ViewHolder(View view) {
             super(view);
             imgThumbnail = (ImageView) itemView.findViewById(R.id.img_thumbnail);
             tvTitle = (TextView) itemView.findViewById(R.id.tv_species);
+            rbRating = (RatingBar) itemView.findViewById(R.id.ratingBar);
         }
+
+
     }
 
 
@@ -46,16 +54,40 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
 
 
     @Override
-    public void onBindViewHolder(ViewHolder viewHolder, Cursor cursor) {
+    public void onBindViewHolder(final ViewHolder viewHolder, Cursor cursor) {
         MovieSummaryItem myListItem = MovieSummaryItem.fromCursor(cursor);
 
-        //http://image.tmdb.org/t/p/w90/dCgm7efXDmiABSdWDHBDBx2jwmn.jpg
-        //viewHolder.imgThumbnail.setImageResource(R.drawable.dolph);
+        //"http://image.tmdb.org/t/p/w300"
         Picasso.with(mContext)
-                .load("http://image.tmdb.org/t/p/w92" + myListItem.getThumbnail())
-                .into(viewHolder.imgThumbnail);
+                .load(mBaseImagePath + myListItem.getThumbnail())
+                .into(viewHolder.imgThumbnail, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        viewHolder.tvTitle.setVisibility(View.INVISIBLE);
+                    }
+
+                    @Override
+                    public void onError() {
+
+                    }
+                });
+        viewHolder.imgThumbnail.setId(myListItem.getMovieId());
 
         viewHolder.tvTitle.setText(myListItem.getName());
+        viewHolder.tvTitle.setId(myListItem.getMovieId());
+        viewHolder.rbRating.setAlpha(0.7f);
+        viewHolder.rbRating.setRating(myListItem.getRating() * (float) 0.5);
+
+        View.OnClickListener onClick = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int nMovieId = v.getId();
+                mActivity.onItemSelected(MovieContract.MovieSummaryEntry.buildMovieSummaryUri(nMovieId));
+            }
+        };
+
+        viewHolder.tvTitle.setOnClickListener(onClick);
+        viewHolder.imgThumbnail.setOnClickListener(onClick);
     }
 
 
