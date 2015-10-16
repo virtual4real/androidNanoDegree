@@ -13,6 +13,11 @@ public class RestApiContract {
     public static final String API_KEY = "api_key";
     public static final String SORT_KEY = "sort_by";
     public static final String PAGE_KEY = "page";
+    public static final String RELEASE_DATE_START_KEY = "release_date.gte";
+    public static final String RELEASE_DATE_END_KEY = "release_date.lte";
+    public static final String VOTE_COUNT_MIN_KEY = "vote_count.gte";
+    public static final String INCLUDE_VIDEO_KEY = "include_video";
+    public static final String INCLUDE_ADULT_KEY = "include_adult";
 
     public static final String SORT_KEY_POPULARITY_ASC = "popularity.asc";
     public static final String SORT_KEY_POPULARITY_DESC = "popularity.desc";

@@ -8,6 +8,9 @@ import android.text.format.Time;
 
 import com.virtual4real.moviemanager.sync.restapi.RestApiContract;
 
+import java.text.DateFormat;
+import java.util.Date;
+
 /**
  * Created by ioanagosman on 28/09/15.
  */
@@ -30,6 +33,11 @@ public class MovieContract {
         time.set(startDate);
         int julianDay = Time.getJulianDay(startDate, time.gmtoff);
         return time.setJulianDay(julianDay);
+    }
+
+    public static String formatDate(long dateInMilliseconds) {
+        Date date = new Date(dateInMilliseconds);
+        return DateFormat.getDateInstance().format(date);
     }
 
     /* Inner class that defines the table contents of the settings table */

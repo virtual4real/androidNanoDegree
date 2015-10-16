@@ -12,6 +12,7 @@ public class MovieSummaryItem {
     private String mName;
     private String mThumbnail;
     private int nMovieId;
+    private int nYear;
     private float dRating;
 
     public int getMovieId() {
@@ -46,6 +47,14 @@ public class MovieSummaryItem {
         this.mThumbnail = thumbnail;
     }
 
+    public int getYear() {
+        return nYear;
+    }
+
+    public void setYear(int nYear) {
+        this.nYear = nYear;
+    }
+
     public static MovieSummaryItem fromCursor(Cursor cursor) {
         MovieSummaryItem item = new MovieSummaryItem();
 
@@ -53,6 +62,7 @@ public class MovieSummaryItem {
         item.setThumbnail(cursor.getString(cursor.getColumnIndex(MovieSummary$Table.POSTERPATH)));
         item.setMovieId(cursor.getInt(cursor.getColumnIndex(MovieSummary$Table.MOVIEID)));
         item.setRating(cursor.getFloat(cursor.getColumnIndex(MovieSummary$Table.VOTEAVERAGE)));
+        item.setYear(cursor.getInt(cursor.getColumnIndex(MovieSummary$Table.YEAROFRELEASE)));
 
         return item;
     }

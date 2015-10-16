@@ -18,6 +18,8 @@ import com.virtual4real.moviemanager.database.UrlSettings$Table;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 /**
@@ -258,6 +260,7 @@ public class MovieProvider extends ContentProvider {
                         movieOrder.setSortType(sortType);
 
                         service.InsertMovieOrder(movieOrder, movieSummary);
+                        nInsert++;
                     }
 
                     getContext().getContentResolver().notifyChange(uri, null);
@@ -294,9 +297,18 @@ public class MovieProvider extends ContentProvider {
 
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         try {
-            movieSummary.setReleaseDate(
-                    MovieContract.normalizeDate(
-                            f.parse(values.getAsString(MovieSummary$Table.RELEASEDATE)).getTime()));
+            String sDate = values.getAsString(MovieSummary$Table.RELEASEDATE);
+            Date dt = null;
+            if (null != sDate) {
+                dt = f.parse(sDate);
+
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(dt);
+
+                movieSummary.setYearOfRelease(cal.get(Calendar.YEAR));
+            }
+            movieSummary.setReleaseDate(null == dt ? MovieContract.normalizeDate(System.currentTimeMillis()) :
+                    MovieContract.normalizeDate(dt.getTime()));
         } catch (ParseException exex) {
             movieSummary.setReleaseDate(MovieContract.normalizeDate(System.currentTimeMillis()));
         }

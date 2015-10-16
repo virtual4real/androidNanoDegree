@@ -73,4 +73,29 @@ public class Utils {
         return prefs.getString(context.getString(R.string.backdrop_base_key), RestApiContract.IMAGE_BASE_URL_DEFAULT);
     }
 
+    public static String getMinDate(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(context.getString(R.string.search_start_key), "19200101");
+    }
+
+    public static String getMaxDate(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(context.getString(R.string.search_end_key), "20170101");
+    }
+
+    public static int getMinVotes(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getInt(context.getString(R.string.search_min_vote_key), 10);
+    }
+
+
+    public static boolean getIncludeAdult(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(context.getString(R.string.search_adult_key), false);
+    }
+
+    public static boolean getIncludeVideo(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(context.getString(R.string.search_video_key), false);
+    }
 }

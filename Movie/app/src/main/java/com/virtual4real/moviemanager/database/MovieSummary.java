@@ -24,6 +24,9 @@ public class MovieSummary extends BaseModel {
     long releaseDate;
 
     @Column
+    int yearOfRelease;
+
+    @Column
     double popularity;
 
     @Column
@@ -56,6 +59,14 @@ public class MovieSummary extends BaseModel {
     //this.id = id;
     //}
 
+
+    public int getYearOfRelease() {
+        return yearOfRelease;
+    }
+
+    public void setYearOfRelease(int yearOfRelease) {
+        this.yearOfRelease = yearOfRelease;
+    }
 
     public String getOverview() {
         return overview;

@@ -2,5 +2,5 @@
 
     <color name="primary">#795548</color>
     <color name="primary_dark">#5D4037</color>
-
+    <color name="primary_bar">#955D4037</color>
 </resources>

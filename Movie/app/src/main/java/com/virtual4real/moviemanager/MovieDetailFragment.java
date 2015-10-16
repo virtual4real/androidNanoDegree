@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -32,7 +33,12 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
     private TextView mTxtOriginalTitle;
     private TextView mReleaseDate;
     private TextView mOverview;
+
+    private TextView mTxtRating;
+    private RatingBar mRatingBar;
+
     private ImageView mImgPlaceholder;
+    private ImageView mImgThumbnail;
 
 
     public MovieDetailFragment() {
@@ -59,7 +65,10 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
         mOverview = (TextView) rootView.findViewById(R.id.overview);
         mReleaseDate = (TextView) rootView.findViewById(R.id.release_date);
 
+        mRatingBar = (RatingBar) rootView.findViewById(R.id.rating_bar_detail);
+        mTxtRating = (TextView) rootView.findViewById(R.id.movie_rating_detail);
 
+        mImgThumbnail = (ImageView) rootView.findViewById(R.id.img_thumbnail_detail);
         mImgPlaceholder = (ImageView) rootView.findViewById(R.id.img_placeholder);
 
         return rootView;
@@ -93,12 +102,21 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         if (data != null && data.moveToFirst()) {
-            mTxtTitle.setText(data.getString(data.getColumnIndex(MovieSummary$Table.TITLE)));
-            mTxtOriginalTitle.setText(data.getString(data.getColumnIndex(MovieSummary$Table.ORIGINALTITLE)));
+            String sOriginalTitle = data.getString(data.getColumnIndex(MovieSummary$Table.ORIGINALTITLE));
+            String sTitle = data.getString(data.getColumnIndex(MovieSummary$Table.TITLE));
+
+            mTxtTitle.setText(sTitle);
+            if (sTitle.equals(sOriginalTitle)) {
+                mTxtOriginalTitle.setVisibility(View.INVISIBLE);
+            } else {
+                mTxtOriginalTitle.setText(sOriginalTitle);
+            }
+
+
             mOverview.setText(data.getString(data.getColumnIndex(MovieSummary$Table.OVERVIEW)));
 
             long nDate = data.getLong(data.getColumnIndex(MovieSummary$Table.RELEASEDATE));
-            mReleaseDate.setText(Long.toString(nDate));
+            mReleaseDate.setText(MovieContract.formatDate(nDate));
 
             String sPath = data.getString(data.getColumnIndex(MovieSummary$Table.BACKDROPPATH));
 
@@ -109,8 +127,26 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
                         .load(sPath)
                         .into(mImgPlaceholder);
             } else {
-                mImgPlaceholder.setVisibility(View.INVISIBLE);
+                mImgPlaceholder.setVisibility(View.GONE);
             }
+
+            sPath = data.getString(data.getColumnIndex(MovieSummary$Table.POSTERPATH));
+
+            if (null != sPath) {
+                sPath = Utils.getBaseImageUrl(getContext()) + sPath;
+
+                Picasso.with(getContext())
+                        .load(sPath)
+                        .into(mImgThumbnail);
+            } else {
+                mImgThumbnail.setVisibility(View.INVISIBLE);
+            }
+
+            float fRating = data.getFloat(data.getColumnIndex(MovieSummary$Table.VOTEAVERAGE));
+            int nCount = data.getInt(data.getColumnIndex(MovieSummary$Table.VOTECOUNT));
+
+            mTxtRating.setText(String.format("%.2f", fRating) + "/10" + " (" + Integer.toString(nCount) + " votes)");
+            mRatingBar.setRating(fRating * (float) 0.5);
 
 
 //            // If onCreateOptionsMenu has already happened, we need to update the share intent now.

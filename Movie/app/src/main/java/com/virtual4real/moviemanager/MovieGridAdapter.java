@@ -30,6 +30,7 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public ImageView imgThumbnail;
         public TextView tvTitle;
+        public TextView tvYear;
         public RatingBar rbRating;
         //TODO: add members for the image URL (maybe define a path in content provider to get this string)
 
@@ -37,6 +38,7 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
             super(view);
             imgThumbnail = (ImageView) itemView.findViewById(R.id.img_thumbnail);
             tvTitle = (TextView) itemView.findViewById(R.id.tv_species);
+            tvYear = (TextView) itemView.findViewById(R.id.tv_year);
             rbRating = (RatingBar) itemView.findViewById(R.id.ratingBar);
         }
 
@@ -75,7 +77,13 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
 
         viewHolder.tvTitle.setText(myListItem.getName());
         viewHolder.tvTitle.setId(myListItem.getMovieId());
-        viewHolder.rbRating.setAlpha(0.7f);
+
+        if (0 < myListItem.getYear()) {
+            viewHolder.tvYear.setText(Integer.toString(myListItem.getYear()));
+        } else {
+            viewHolder.tvYear.setVisibility(View.INVISIBLE);
+        }
+
         viewHolder.rbRating.setRating(myListItem.getRating() * (float) 0.5);
 
         View.OnClickListener onClick = new View.OnClickListener() {

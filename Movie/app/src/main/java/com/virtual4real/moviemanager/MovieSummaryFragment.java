@@ -168,6 +168,7 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
         Log.d("CURSOR____", sortOrder);
 
+        //MovieManagerSyncAdapter.syncImmediately(getContext(), sortOrder, 1);
         return new CursorLoader(getActivity(), MovieContract.MovieSummaryEntry.CONTENT_URI, null, null, null, sortOrder);
 
     }
@@ -207,6 +208,8 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         int w = Math.round(dMetrics.widthPixels / density);
 
         //TODO: modify when the detail fragment is in the same screen as summary fragment
+        //TODO: modify the calculation of number of columns to take into consideration the
+        //size of the grid_item (which must be defined in resources).
         return (w < 450 ? 2 : 3);
     }
 

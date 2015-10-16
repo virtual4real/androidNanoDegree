@@ -5,36 +5,17 @@ import android.accounts.AccountManager;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
-import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.SyncRequest;
 import android.content.SyncResult;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
 
 import com.virtual4real.moviemanager.R;
-import com.virtual4real.moviemanager.data.MovieContract;
-import com.virtual4real.moviemanager.database.MovieSummary;
-import com.virtual4real.moviemanager.database.MovieSummary$Table;
-import com.virtual4real.moviemanager.database.UrlSettings;
+import com.virtual4real.moviemanager.Utils;
 import com.virtual4real.moviemanager.database.UrlSettings$Table;
-import com.virtual4real.moviemanager.sync.poco.JsnImages;
-import com.virtual4real.moviemanager.sync.poco.JsnMovieDetail;
-import com.virtual4real.moviemanager.sync.poco.JsnMovieSummary;
-import com.virtual4real.moviemanager.sync.poco.JsnMovieSummaryResult;
-import com.virtual4real.moviemanager.sync.poco.JsnSettings;
-import com.virtual4real.moviemanager.sync.restapi.IApiMethods;
-import com.virtual4real.moviemanager.sync.restapi.RestApiContract;
 
-import retrofit.Callback;
-import retrofit.RestAdapter;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
 
 /**
  * Created by ioanagosman on 28/09/15.
@@ -50,7 +31,7 @@ public class MovieManagerSyncAdapter extends AbstractThreadedSyncAdapter {
     // 60 seconds (1 minute) * 180 = 3 hours
     public static final int SYNC_INTERVAL = 60 * 180;
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL / 3;
-    private static final long DAY_IN_MILLIS = 1000 * 60 * 60 * 24;
+
     private static final int MOVIE_MANAGER_NOTIFICATION_ID = 3005;
 
 
@@ -72,17 +53,21 @@ public class MovieManagerSyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
 
         try {
-            final String API_KEY_VALUE = getContext().getString(R.string.api_key);
-            final String API_URL = getContext().getString(R.string.api_url);
+            SyncDataService sync = new SyncDataService(getContext());
 
             String sOrder = extras.getString(SYNC_SORT_ORDER);
             int nPage = extras.getInt(SYNC_PAGE);
             long nMovieId = extras.getLong(SYNC_MOVIE_ID);
 
+
             if (0 == nMovieId) {
-                syncMovieSummary(account, authority, provider, syncResult, API_KEY_VALUE, API_URL, sOrder, nPage);
+                SearchParameters sch = new SearchParameters(sOrder, nPage,
+                        Utils.getMinDate(getContext()), Utils.getMaxDate(getContext()),
+                        Utils.getMinVotes(getContext()), Utils.getIncludeAdult(getContext()),
+                        Utils.getIncludeVideo(getContext()));
+                sync.syncMovieSummary(account, authority, provider, syncResult, sch);
             } else {
-                syncMovie(account, authority, provider, syncResult, API_KEY_VALUE, API_URL, nMovieId);
+                sync.syncMovie(account, authority, provider, syncResult, nMovieId);
             }
 
 
@@ -94,255 +79,11 @@ public class MovieManagerSyncAdapter extends AbstractThreadedSyncAdapter {
         return;
     }
 
-    private void syncMovie(Account account, String authority, ContentProviderClient provider,
-                           SyncResult syncResult, String API_KEY_VALUE, String API_URL, long nMovieId) {
 
-        RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint(API_URL)
-                .build();
-        IApiMethods methods = restAdapter.create(IApiMethods.class);
 
-        Callback callbackMovieDetail = new Callback() {
-            @Override
-            public void success(Object o, Response response) {
-                JsnMovieDetail movieDetailResult = (JsnMovieDetail) o;
 
 
-                //ContentValues[] movieValues =
-                //        getMovieSummaryContentValues(movieDetailResult);
 
-                //int nInserted = getContext().getContentResolver().bulkInsert(
-                //        MovieContract.MovieDetailEntry.CONTENT_URI,
-                //        movieValues
-                //);
-
-
-                //getContext().getContentResolver().notifyChange(MovieContract.MovieSummaryEntry.CONTENT_URI, null, false);
-
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-
-            }
-        };
-        methods.getMovieDetail(nMovieId, API_KEY_VALUE, callbackMovieDetail);
-
-    }
-
-    private void syncMovieSummary(Account account, String authority, ContentProviderClient provider,
-                                  SyncResult syncResult, String API_KEY_VALUE, String API_URL, String sOrder, int nPage) {
-
-        boolean bCallAll = false;
-
-        RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint(API_URL)
-                .build();
-        IApiMethods methods = restAdapter.create(IApiMethods.class);
-
-        if (null == sOrder) {
-            bCallAll = true;
-        } else {
-            getMoviesByPageAndSortOrder(methods, API_KEY_VALUE, nPage, getRestApiSortOrder(sOrder), false);
-        }
-
-        if (bCallAll) {
-            getSettings(methods, API_KEY_VALUE);
-
-            getMoviesByPageAndSortOrder(methods, API_KEY_VALUE, nPage, RestApiContract.SORT_KEY_POPULARITY_ASC, false);
-            getMoviesByPageAndSortOrder(methods, API_KEY_VALUE, nPage, RestApiContract.SORT_KEY_POPULARITY_DESC, false);
-            getMoviesByPageAndSortOrder(methods, API_KEY_VALUE, nPage, RestApiContract.SORT_KEY_VOTE_ASC, false);
-            getMoviesByPageAndSortOrder(methods, API_KEY_VALUE, nPage, RestApiContract.SORT_KEY_VOTE_DESC, false);
-            getMoviesByPageAndSortOrder(methods, API_KEY_VALUE, nPage, RestApiContract.SORT_KEY_RELEASE_ASC, false);
-            getMoviesByPageAndSortOrder(methods, API_KEY_VALUE, nPage, RestApiContract.SORT_KEY_RELEASE_DESC, false);
-        }
-
-    }
-
-    private String getRestApiSortOrder(String sIntefaceString) {
-        String sResult = getTypeOfOrder(sIntefaceString, getContext().getString(R.string.order_popular));
-        if (null != sResult) {
-            return sResult;
-        }
-
-        sResult = getTypeOfOrder(sIntefaceString, getContext().getString(R.string.order_rated));
-        if (null != sResult) {
-            return sResult;
-        }
-
-        sResult = getTypeOfOrder(sIntefaceString, getContext().getString(R.string.order_release));
-        if (null != sResult) {
-            return sResult;
-        }
-
-        return null;
-    }
-
-    private String getTypeOfOrder(String sInterface, String sOrder) {
-        if (sInterface.startsWith(sOrder)) {
-            return getAscOrDesc(sInterface, RestApiContract.SORT_KEY_POPULARITY_ASC, RestApiContract.SORT_KEY_POPULARITY_DESC);
-        }
-
-        return null;
-    }
-
-    private String getAscOrDesc(String sInterface, String sAsc, String sDesc) {
-        if (null == sInterface) return null;
-
-        return sInterface.endsWith(getContext().getString(R.string.sort_asc)) ? sAsc : sDesc;
-    }
-
-    private void getMoviesByPageAndSortOrder(IApiMethods methods, String sApiKey, int nPage, final String sSortOrder, final boolean notifyContentChange) {
-        Callback callbackMovieSummary = new Callback() {
-            @Override
-            public void success(Object o, Response response) {
-                JsnMovieSummaryResult movieResult = (JsnMovieSummaryResult) o;
-
-
-                ContentValues[] movieValues =
-                        getMovieSummaryContentValues(
-                                movieResult.getTotal_results(),
-                                movieResult.getTotal_pages(),
-                                movieResult.getPage(), sSortOrder,
-                                movieResult.getResults());
-
-
-                int nInserted = getContext().getContentResolver().bulkInsert(
-                        MovieContract.MovieSummaryEntry.CONTENT_URI,
-                        movieValues
-                );
-
-                if (notifyContentChange) {
-                    getContext().getContentResolver().notifyChange(MovieContract.MovieSummaryEntry.CONTENT_URI, null, false);
-                }
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-
-            }
-        };
-        methods.getMovieSummary(sApiKey, sSortOrder, 1, callbackMovieSummary);
-
-    }
-
-    private void getSettings(IApiMethods methods, String sApiKey) {
-        boolean bExecute = false;
-
-        Cursor cursor = getContext().getContentResolver()
-                .query(MovieContract.SettingEntry.CONTENT_URI, null, null, null, null);
-        if (cursor.getCount() != 1) {
-            getContext().getContentResolver().delete(MovieContract.SettingEntry.CONTENT_URI, null, null);
-            bExecute = true;
-        } else {
-            cursor.moveToFirst();
-
-            long nDateUpdate = cursor.getLong(cursor.getColumnIndex(UrlSettings$Table.DATEUPDATED));
-            bExecute = (System.currentTimeMillis() - nDateUpdate >= DAY_IN_MILLIS);
-
-            cursor.close();
-        }
-
-        if (!bExecute) {
-            return;
-        }
-
-        Callback callbackSettings = new Callback() {
-            @Override
-            public void success(Object o, Response response) {
-                JsnSettings setting = (JsnSettings) o;
-
-                ContentValues settingsValues = getSettingsContentValues(setting);
-
-
-                Uri insertedUri = getContext().getContentResolver().insert(
-                        MovieContract.SettingEntry.CONTENT_URI,
-                        settingsValues
-                );
-                long settingId = ContentUris.parseId(insertedUri);
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-
-            }
-        };
-        methods.getSettings(sApiKey, callbackSettings);
-
-    }
-
-    private ContentValues[] getMovieSummaryContentValues(String totalResults, String totalPages,
-                                                         String currentPage, String sortType, JsnMovieSummary[] movies) {
-        ContentValues[] values = new ContentValues[movies.length + 1];
-
-        values[0] = getMovieSummaryInfoContentValues(totalResults, totalPages, currentPage, sortType);
-
-        for (int i = 0; i < movies.length; i++) {
-            values[i + 1] = getMovieSummaryContentValue(movies[i], i);
-
-        }
-
-        return values;
-    }
-
-    private ContentValues getMovieSummaryInfoContentValues(String totalResults,
-                                                           String totalPages, String currentPage, String sortType) {
-        ContentValues values = new ContentValues();
-
-        values.put(MovieContract.MovieSummaryEntry.PAGINATION_TOTAL_RESULTS, totalResults);
-        values.put(MovieContract.MovieSummaryEntry.PAGINATION_TOTAL_PAGES, totalPages);
-        values.put(MovieContract.MovieSummaryEntry.PAGINATION_CURRENT_PAGE, currentPage);
-        values.put(MovieContract.MovieSummaryEntry.SORT_TYPE, MovieContract.MovieSummaryEntry.GetSortTypeInt(sortType));
-
-        return values;
-    }
-
-
-    private ContentValues getMovieSummaryContentValue(JsnMovieSummary movie, int i) {
-        ContentValues value = new ContentValues();
-
-        value.put(MovieSummary$Table.MOVIEID, movie.getId());
-        value.put(MovieSummary$Table.ORIGINALTITLE, movie.getOriginal_title());
-        value.put(MovieSummary$Table.TITLE, movie.getTitle());
-        value.put(MovieSummary$Table.POPULARITY, movie.getPopularity());
-        value.put(MovieSummary$Table.POSTERPATH, movie.getPoster_path());
-        value.put(MovieSummary$Table.RELEASEDATE, movie.getRelease_date());
-        value.put(MovieSummary$Table.VOTEAVERAGE, movie.getVote_average());
-        value.put(MovieSummary$Table.VOTECOUNT, movie.getVote_count());
-        value.put(MovieSummary$Table.BACKDROPPATH, movie.getBackdrop_path());
-        value.put(MovieSummary$Table.OVERVIEW, movie.getOverview());
-        value.put(MovieContract.MovieSummaryEntry.MOVIE_SUMMARY_POSITION, i);
-
-        return value;
-    }
-
-    private ContentValues getSettingsContentValues(JsnSettings setting) {
-        ContentValues settingsValues = new ContentValues();
-
-        JsnImages img = setting.getImages();
-
-        settingsValues.put(UrlSettings$Table.BASEURL, img.getBase_url());
-        settingsValues.put(UrlSettings$Table.SECUREBASEURL, img.getSecure_base_url());
-
-        settingsValues.put(UrlSettings$Table.LOGOSIZEURL, getValues(img.getLogo_sizes()));
-        settingsValues.put(UrlSettings$Table.BACKDROPSIZEURL, getValues(img.getBackdrop_sizes()));
-        settingsValues.put(UrlSettings$Table.POSTERSIZEURL, getValues(img.getPoster_sizes()));
-        settingsValues.put(UrlSettings$Table.PROFILESIZEURL, getValues(img.getProfile_sizes()));
-        settingsValues.put(UrlSettings$Table.STILLSIZEURL, getValues(img.getStill_sizes()));
-
-
-        return settingsValues;
-    }
-
-    private String getValues(String[] vstr) {
-        StringBuilder builder = new StringBuilder();
-        for (String s : vstr) {
-            if (s.equals("original")) continue;
-            builder.append(s);
-            builder.append(";");
-        }
-        return builder.toString();
-    }
 
 
     private void notifyMovies() {
@@ -460,7 +201,7 @@ public class MovieManagerSyncAdapter extends AbstractThreadedSyncAdapter {
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
         bundle.putString(SYNC_SORT_ORDER, sOrder);
         bundle.putInt(SYNC_PAGE, nPage);
-        //ContentResolver.setIsSyncable(getSyncAccount(context), context.getString(R.string.content_authority), 1);
+
         ContentResolver.requestSync(getSyncAccount(context), context.getString(R.string.content_authority), bundle);
     }
 
@@ -469,7 +210,7 @@ public class MovieManagerSyncAdapter extends AbstractThreadedSyncAdapter {
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
         bundle.putLong(SYNC_MOVIE_ID, nMovieId);
-        //ContentResolver.setIsSyncable(getSyncAccount(context), context.getString(R.string.content_authority), 1);
+
         ContentResolver.requestSync(getSyncAccount(context), context.getString(R.string.content_authority), bundle);
     }
 

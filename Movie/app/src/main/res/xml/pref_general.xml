@@ -1,0 +1,36 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <com.virtual4real.moviemanager.DatePreference
+        android:key="@string/search_start_key"
+        android:title="@string/pref_search_start_date_label"
+        android:defaultValue="19000101" />
+
+    <com.virtual4real.moviemanager.DatePreference
+        android:key="@string/search_end_key"
+        android:title="@string/pref_search_end_date_label"
+        android:defaultValue="20500101" />
+
+    <EditTextPreference
+        android:key="@string/search_min_vote_key"
+        android:title="@string/search_min_vote_label"
+        android:defaultValue="10"
+        android:selectAllOnFocus="true"
+        android:inputType="number"
+        android:singleLine="true"
+        android:maxLines="1" />
+
+
+    <SwitchPreference
+        android:key="@string/search_adult_key"
+        android:title="@string/search_adult_title"
+        android:summary="@string/search_adult_label"
+        android:defaultValue="false" />
+
+    <SwitchPreference
+        android:key="@string/search_video_key"
+        android:title="@string/search_video_title"
+        android:summary="@string/search_video_label"
+        android:defaultValue="true" />
+
+
+</PreferenceScreen>

@@ -29,6 +29,15 @@ public class MovieOrder extends BaseModel {
     MovieSummary movieSummary;
 
     @Column
+    @ForeignKey(
+            references = {@ForeignKeyReference(columnName = "sync_operation_id",
+                    columnType = Long.class,
+                    foreignColumnName = "id")},
+            saveForeignKeyModel = false)
+    SyncOperation syncOperation;
+
+
+    @Column
     int sortType;
 
     @Column
@@ -83,5 +92,9 @@ public class MovieOrder extends BaseModel {
 
     public void setPosition(int position) {
         this.position = position;
+    }
+
+    public SyncOperation getSyncOperation() {
+        return syncOperation;
     }
 }

@@ -26,7 +26,8 @@
                 android:id="@+id/favorite"
                 android:title="favorite"
                 android:icon="@drawable/favourite"
-                app:showAsAction="ifRoom|withText" />
+                app:showAsAction="ifRoom|withText"
+                android:visible="false" />
 
             <item
                 android:id="@+id/release"
