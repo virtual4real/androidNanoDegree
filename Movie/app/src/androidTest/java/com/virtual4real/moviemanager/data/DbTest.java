@@ -10,7 +10,7 @@ import com.virtual4real.moviemanager.database.UrlSettings;
  * Created by ioanagosman on 01/10/15.
  */
 public class DbTest extends AndroidTestCase {
-
+/*
     public void setUp() {
         FlowManager.init(mContext.getApplicationContext());
     }
@@ -58,4 +58,6 @@ public class DbTest extends AndroidTestCase {
         //assertEquals(stillMin, url.getStillSizeMinUrl());
         //assertEquals(stillMax, url.getStillSizeMaxUrl());
     }
+
+    */
 }
