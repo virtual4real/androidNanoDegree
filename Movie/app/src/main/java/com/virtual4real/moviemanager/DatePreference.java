@@ -72,6 +72,8 @@ public class DatePreference extends DialogPreference {
             if (callChangeListener(time)) {
                 persistString(time);
             }
+
+            setSummary(getSummaryDate());
         }
     }
 

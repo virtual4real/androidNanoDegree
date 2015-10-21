@@ -8,6 +8,11 @@ import com.raizlabs.android.dbflow.structure.BaseModel;
 /**
  * Created by ioanagosman on 30/09/15.
  */
+
+/**
+ * UrlSettings contains configuration information
+ * provided by the rest api regarding the image path construction.
+ */
 @Table(databaseName = MovieDatabase.NAME)
 public class UrlSettings extends BaseModel {
 

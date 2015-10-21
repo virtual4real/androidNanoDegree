@@ -3,6 +3,10 @@ package com.virtual4real.moviemanager.sync.poco;
 /**
  * Created by ioanagosman on 28/09/15.
  */
+
+/**
+ * JsonObject returned by the movie db rest api
+ */
 public class JsnSettings {
     private String[] change_keys;
 

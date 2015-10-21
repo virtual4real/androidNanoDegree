@@ -35,6 +35,8 @@ import com.virtual4real.moviemanager.database.MovieSummary$Table;
 import com.virtual4real.moviemanager.database.UrlSettings;
 import com.virtual4real.moviemanager.database.UrlSettings$Table;
 import com.virtual4real.moviemanager.sync.MovieManagerSyncAdapter;
+import com.virtual4real.moviemanager.sync.SearchParameters;
+import com.virtual4real.moviemanager.sync.SyncDataService;
 import com.virtual4real.moviemanager.sync.restapi.RestApiContract;
 
 import java.util.regex.Pattern;
@@ -44,9 +46,22 @@ import java.util.regex.Pattern;
  */
 public class MovieSummaryFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    class SummaryImageSize {
+        public int Width;
+        public int NoColumns;
+        public int NoSpaces;
+        public int Height;
+        public int TextHeight;
+
+        public SummaryImageSize() {
+
+        }
+    }
+
     RecyclerView mRecyclerView;
     RecyclerView.LayoutManager mLayoutManager;
     RecyclerView.Adapter mAdapter;
+    SummaryImageSize summ;
 
     private ContentObserver mObserver;
 
@@ -64,7 +79,7 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         mObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
             public void onChange(boolean selfChange) {
                 //TODO: setup local variables... maybe
-                Log.d("ONCHANGE", "ONCHANGE_______________");
+                //Log.d("ONCHANGE", "ONCHANGE_______________");
             }
         };
         getActivity().getContentResolver()
@@ -166,10 +181,21 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         String sortOrder = Utils.getOrderAndSortFromPreferences(getContext());
         //TODO: set the page in the selection string of the query call in the content provider
 
-        Log.d("CURSOR____", sortOrder);
+        //Log.d("CURSOR____", sortOrder);
 
-        //MovieManagerSyncAdapter.syncImmediately(getContext(), sortOrder, 1);
-        return new CursorLoader(getActivity(), MovieContract.MovieSummaryEntry.CONTENT_URI, null, null, null, sortOrder);
+        //verify if there is data for the parameters
+        //and if it is not call sync imediatelly
+        //TODO: maybe send all parameters in syncImmediately (parcelable)
+        SyncDataService sync = new SyncDataService(getContext());
+        if (0 == sync.GetOperationIdForParameters(new SearchParameters(sortOrder, 1,
+                Utils.getMinDate(getContext()), Utils.getMaxDate(getContext()),
+                Utils.getMinVotes(getContext()), Utils.getIncludeAdult(getContext()), Utils.getIncludeVideo(getContext())))) {
+            MovieManagerSyncAdapter.syncImmediately(getContext(), sortOrder, 1);
+        }
+
+
+        return new CursorLoader(getActivity(), MovieContract.MovieSummaryEntry.CONTENT_URI, null, null,
+                new String[]{Integer.toString(1), sortOrder}, null);
 
     }
 
@@ -189,7 +215,8 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         if (null != mRecyclerView) {
             mRecyclerView.setHasFixedSize(true);
 
-            mLayoutManager = new GridLayoutManager(getActivity(), getNoColumnsBasedOnScreenSize());
+            summ = getColumnMeasurementsBasedOnScreenSize();
+            mLayoutManager = new GridLayoutManager(getActivity(), summ.NoColumns);
             mRecyclerView.setLayoutManager(mLayoutManager);
 
             setImageBaseUrl();
@@ -200,17 +227,38 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         return rootView;
     }
 
-    private int getNoColumnsBasedOnScreenSize() {
+    private SummaryImageSize getColumnMeasurementsBasedOnScreenSize() {
+
+        SummaryImageSize summ = new SummaryImageSize();
 
         DisplayMetrics dMetrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(dMetrics);
-        float density = dMetrics.density;
-        int w = Math.round(dMetrics.widthPixels / density);
+        //float density = dMetrics.density;
+        //int w = Math.round(dMetrics.widthPixels / density);
+        int w = dMetrics.widthPixels;
+
+        int nMinWidth = (int) getResources().getDimension(R.dimen.card_view_width_min);
+        float nRatio = Float.parseFloat(getResources().getString(R.string.card_view_image_ratio));
+        int nSpace = (int) getResources().getDimension(R.dimen.card_view_space);
+        int nTextHeight = (int) getResources().getDimension(R.dimen.card_view_text_height);
+
+        int nColumns = 1;
+
+        while (nMinWidth * nColumns < w) {
+            nColumns++;
+        }
+
+        float nWidth = (w - (nColumns + 1) * nSpace) / nColumns;
+
+        summ.NoColumns = nColumns;
+
+        summ.Width = Math.round(nWidth);
+        summ.Height = Math.round(nWidth * nRatio);
+        summ.TextHeight = Math.round(nTextHeight);
+        summ.NoSpaces = Math.round(nSpace);
 
         //TODO: modify when the detail fragment is in the same screen as summary fragment
-        //TODO: modify the calculation of number of columns to take into consideration the
-        //size of the grid_item (which must be defined in resources).
-        return (w < 450 ? 2 : 3);
+        return summ;
     }
 
     private void setImageBaseUrl() {
@@ -311,14 +359,16 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 //            mListView.smoothScrollToPosition(mPosition);
 //        }
 
-        mAdapter = new MovieGridAdapter(getContext(), data, (Callback) getActivity());
+        mAdapter = new MovieGridAdapter(getContext(), data, (Callback) getActivity(),
+                summ.NoSpaces, summ.Width, summ.Height, summ.TextHeight);
         mRecyclerView.setAdapter(mAdapter);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         //mForecastAdapter.swapCursor(null);
-        mAdapter = new MovieGridAdapter(getContext(), null, (Callback) getActivity());
+        mAdapter = new MovieGridAdapter(getContext(), null, (Callback) getActivity(),
+                summ.NoSpaces, summ.Width, summ.Height, summ.TextHeight);
         mRecyclerView.setAdapter(mAdapter);
     }
 

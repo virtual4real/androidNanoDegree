@@ -11,6 +11,14 @@ import com.raizlabs.android.dbflow.structure.BaseModel;
  * Created by ioanagosman on 30/09/15.
  */
 
+/**
+ * MovieOrder table contains a reference to a MovieSummary and the information about the
+ * order of this MovieSummary in one of the possible sort types.
+ * MovieOrder also contains a reference to the SyncOperation that corresponds to the data.
+ * The SyncOperation contains the parameters (min date, max date, min vote, adult, video)
+ * used to query data from the rest api.
+ */
+
 @Table(databaseName = MovieDatabase.NAME)
 public class MovieOrder extends BaseModel {
     @Column
@@ -96,5 +104,9 @@ public class MovieOrder extends BaseModel {
 
     public SyncOperation getSyncOperation() {
         return syncOperation;
+    }
+
+    public void setSyncOperation(SyncOperation syncOperation) {
+        this.syncOperation = syncOperation;
     }
 }

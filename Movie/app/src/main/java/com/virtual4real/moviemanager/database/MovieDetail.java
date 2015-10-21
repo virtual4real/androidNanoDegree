@@ -8,6 +8,14 @@ import com.raizlabs.android.dbflow.structure.BaseModel;
 /**
  * Created by ioanagosman on 30/09/15.
  */
+
+/**
+ * This class represents the table MovieDetail and it is used by DBFlow.
+ * MovieDetail table contains information about the movie, more detailed as
+ * the MovieSummary class.
+ * It is linked to the MovieSummary objects for which it extends the information.
+ */
+
 @Table(databaseName = MovieDatabase.NAME)
 public class MovieDetail extends BaseModel {
     @Column

@@ -51,7 +51,7 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
 
     @Override
     public void onItemSelected(Uri dateUri) {
-        Log.d("CALLBACK", dateUri.toString());
+        //Log.d("CALLBACK", dateUri.toString());
         long nMovieId = MovieContract.MovieSummaryEntry.getMovieSummaryId(dateUri);
         MovieManagerSyncAdapter.syncImmediately(getApplicationContext(), nMovieId);
         Intent intent = new Intent(this, MovieDetailActivity.class).setData(dateUri);

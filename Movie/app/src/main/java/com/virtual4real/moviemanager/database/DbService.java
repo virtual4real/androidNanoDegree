@@ -17,17 +17,70 @@ import java.util.List;
 /**
  * Created by ioanagosman on 01/10/15.
  */
+
+/**
+ * Helper class to work with the database
+ */
 public class DbService {
 
+    /**
+     * In the UrlSettings table should be only one entry at all times
+     *
+     * @return
+     */
     public UrlSettings GetFirstUrlSetting() {
         UrlSettings setting = new Select().from(UrlSettings.class).querySingle();
         return setting;
     }
 
+    /**
+     * Get all UrlSettings
+     * @return
+     */
     public Cursor GetUrlSetting() {
         return new Select().from(UrlSettings.class).query();
     }
 
+    /**
+     * Get all SyncOperations based on parameters
+     *
+     * @param sMinDate the min date column
+     * @param sMaxDate max date column
+     * @param nVotes   number of votes column
+     * @param bAdult   is adult column
+     * @param bVideo   is video column
+     * @return all SyncOperations that satisfy the criterias
+     */
+    public Cursor GetOperations(String sMinDate, String sMaxDate, int nVotes, boolean bAdult, boolean bVideo) {
+        return new Select()
+                .from(SyncOperation.class)
+                .where(Condition.column(SyncOperation$Table.STARTDATE).eq(sMinDate))
+                .and(Condition.column(SyncOperation$Table.ENDDATE).eq(sMaxDate))
+                .and(Condition.column(SyncOperation$Table.NOOFVOTES).eq(nVotes))
+                .and(Condition.column(SyncOperation$Table.ISADULT).eq(bAdult))
+                .and(Condition.column(SyncOperation$Table.ISVIDEO).eq(bVideo))
+                .query();
+    }
+
+    /**
+     * Get a sync operation by its id
+     *
+     * @param nOperationid operation id
+     * @return the operation with the required id or null
+     */
+    public SyncOperation GetSyncOperationById(long nOperationid) {
+        return new Select()
+                .from(SyncOperation.class)
+                .where(Condition.column(SyncOperation$Table.ID).eq(nOperationid))
+                .querySingle();
+    }
+
+    /**
+     * Get all movie summaries for the specified sort order and page
+     * @param nSort integer defining the sort type
+     * @param nPage the requested page
+     * @return all movie summaries that satisfy the criterias
+     */
     public Cursor GetMovieSummaries(int nSort, int nPage) {
         return new Select()
                 .from(MovieSummary.class)
@@ -46,11 +99,30 @@ public class DbService {
         } else {
             url.save();
         }
-        return url.id;
+        return url.getId();
+    }
+
+    public long InsertSyncOperation(SyncOperation ops) {
+        if (0 == ops.getId()) {
+            ops.insert();
+        } else {
+            ops.save();
+        }
+
+        return ops.getId();
     }
 
     public void DeleteUrlSettings(long nId) {
         Delete.table(UrlSettings.class, Condition.column(UrlSettings$Table.ID).isNot(nId));
+    }
+
+    public void DeleteSyncOperation(long nId) {
+        Delete.table(SyncOperation.class, Condition.column(SyncOperation$Table.ID).is(nId));
+    }
+
+    public void DeleteAllSyncOperationAndOrders() {
+        Delete.table(MovieOrder.class);
+        Delete.table(SyncOperation.class);
     }
 
     public void DeleteAllUrlSettings() {

@@ -9,12 +9,16 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.Bundle;
 
+import com.virtual4real.moviemanager.R;
 import com.virtual4real.moviemanager.database.DbService;
 import com.virtual4real.moviemanager.database.MovieOrder;
 import com.virtual4real.moviemanager.database.MovieSummary;
 import com.virtual4real.moviemanager.database.MovieSummary$Table;
+import com.virtual4real.moviemanager.database.SyncOperation;
+import com.virtual4real.moviemanager.database.SyncOperation$Table;
 import com.virtual4real.moviemanager.database.UrlSettings;
 import com.virtual4real.moviemanager.database.UrlSettings$Table;
+import com.virtual4real.moviemanager.sync.DataTransformer;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -34,25 +38,18 @@ public class MovieProvider extends ContentProvider {
     static final int SETTINGS = 100;
     static final int MOVIE_SUMMARY = 101;
     static final int MOVIE_DETAIL_ID = 102;
-    static final int LOCATION = 300;
+    static final int OPERATIONS = 103;
 
 
     static UriMatcher buildUriMatcher() {
-        // I know what you're thinking.  Why create a UriMatcher when you can use regular
-        // expressions instead?  Because you're not crazy, that's why.
-
-        // All paths added to the UriMatcher have a corresponding code to return when a match is
-        // found.  The code passed into the constructor represents the code to return for the root
-        // URI.  It's common to use NO_MATCH as the code for this case.
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
         final String authority = MovieContract.CONTENT_AUTHORITY;
-//
-//        // For each type of URI you want to add, create a corresponding code.
+
         matcher.addURI(authority, MovieContract.PATH_SETTINGS, SETTINGS);
+        matcher.addURI(authority, MovieContract.PATH_OPERATIONS, OPERATIONS);
         matcher.addURI(authority, MovieContract.PATH_MOVIES, MOVIE_SUMMARY);
         matcher.addURI(authority, MovieContract.PATH_MOVIES + "/*", MOVIE_DETAIL_ID);
-//
-//        matcher.addURI(authority, WeatherContract.PATH_LOCATION, LOCATION);
+
         return matcher;
     }
 
@@ -91,12 +88,26 @@ public class MovieProvider extends ContentProvider {
                 retCursor = service.GetUrlSetting();
                 break;
             }
+            case OPERATIONS: {
+                DbService service = new DbService();
+
+                //TODO: put these strings in resources
+                String sMaxDate = getParameter(selectionArgs, 0, getContext().getString(R.string.default_max_date));
+                String sMinDate = getParameter(selectionArgs, 1, getContext().getString(R.string.default_min_date));
+                int nVotes = Integer.parseInt(getParameter(selectionArgs, 2, getContext().getString(R.string.default_min_votes)));
+                boolean bAdult = Boolean.parseBoolean(getParameter(selectionArgs, 3, getContext().getString(R.string.default_adult)));
+                boolean bVideo = Boolean.parseBoolean(getParameter(selectionArgs, 4, getContext().getString(R.string.default_video)));
+
+                retCursor = service.GetOperations(sMinDate, sMaxDate, nVotes, bAdult, bVideo);
+                break;
+            }
             case MOVIE_SUMMARY: {
                 DbService service = new DbService();
 
-                int nOrder = MovieContract.MovieSummaryEntry.GetSortTypeIntFromInterface(sortOrder);
-                //TODO: get the page from the selection parameter
-                retCursor = service.GetMovieSummaries(nOrder, 1);
+                int nOrder = MovieContract.MovieOrderEntry.GetSortTypeIntFromInterface(selectionArgs[1]);
+                int nPage = Integer.parseInt(selectionArgs[0]);
+                //TODO: other paramters from selectionArgs
+                retCursor = service.GetMovieSummaries(nOrder, nPage);
                 break;
             }
 
@@ -107,27 +118,28 @@ public class MovieProvider extends ContentProvider {
             }
         }
 
-        retCursor.setNotificationUri(getContext().getContentResolver(), uri);
+        if (null != retCursor) {
+            retCursor.setNotificationUri(getContext().getContentResolver(), uri);
+        }
         return retCursor;
     }
 
+    /**
+     * Helper method to get the value at a position in an array or a default value
+     *
+     * @param args          the array in which to search for a value
+     * @param nPos          the position where the value should be found
+     * @param sDefaultValue if the value was not found at the specified position, return the default value
+     * @return
+     */
+    private String getParameter(String[] args, int nPos, String sDefaultValue) {
+        if (null == args || args.length < nPos + 1) {
+            return sDefaultValue;
+        }
 
-    private UrlSettings getUrlSetting(ContentValues values) {
-        UrlSettings url = new UrlSettings();
-
-        url.setDateUpdated(MovieContract.normalizeDate(System.currentTimeMillis()));
-        ;
-        url.setBaseUrl(values.getAsString(UrlSettings$Table.BASEURL));
-        url.setSecureBaseUrl(values.getAsString(UrlSettings$Table.SECUREBASEURL));
-
-        url.setLogoSizeUrl(values.getAsString(UrlSettings$Table.LOGOSIZEURL));
-        url.setBackdropSizeUrl(values.getAsString(UrlSettings$Table.BACKDROPSIZEURL));
-        url.setPosterSizeUrl(values.getAsString(UrlSettings$Table.POSTERSIZEURL));
-        url.setProfileSizeUrl(values.getAsString(UrlSettings$Table.PROFILESIZEURL));
-        url.setStillSizeUrl(values.getAsString(UrlSettings$Table.STILLSIZEURL));
-
-        return url;
+        return args[nPos];
     }
+
 
 
     @Override
@@ -138,14 +150,21 @@ public class MovieProvider extends ContentProvider {
         switch (match) {
             case SETTINGS: {
                 DbService service = new DbService();
-                UrlSettings url = getUrlSetting(values);
+                UrlSettings url = DataTransformer.getUrlSetting(values);
                 long id = service.InsertUrlSetting(url);
                 returnUri = MovieContract.SettingEntry.buildSettingUri(id);
                 break;
             }
+            case OPERATIONS: {
+                DbService service = new DbService();
+                SyncOperation ops = DataTransformer.getSyncOperation(values);
+                long id = service.InsertSyncOperation(ops);
+                returnUri = MovieContract.SyncOperationEntry.buildSettingUri(id);
+                break;
+            }
             case MOVIE_SUMMARY: {
                 DbService service = new DbService();
-                MovieSummary movie = getMovieSummary(service, values);
+                MovieSummary movie = DataTransformer.getMovieSummary(service, values);
                 movie.save();
                 returnUri = MovieContract.MovieSummaryEntry.buildMovieSummaryUri(movie.getMovieId());
                 break;
@@ -180,6 +199,11 @@ public class MovieProvider extends ContentProvider {
                 }
                 break;
             }
+            case OPERATIONS: {
+                DbService service = new DbService();
+                service.DeleteAllSyncOperationAndOrders();
+                break;
+            }
             case MOVIE_SUMMARY: {
                 DbService service = new DbService();
                 if (null == vIds) {
@@ -210,13 +234,13 @@ public class MovieProvider extends ContentProvider {
         switch (match) {
             case SETTINGS: {
                 DbService service = new DbService();
-                UrlSettings url = getUrlSetting(values);
+                UrlSettings url = DataTransformer.getUrlSetting(values);
                 service.InsertUrlSetting(url);
                 break;
             }
             case MOVIE_SUMMARY: {
                 DbService service = new DbService();
-                MovieSummary movie = getMovieSummary(service, values);
+                MovieSummary movie = DataTransformer.getMovieSummary(service, values);
                 service.InsertMovieSummary(movie);
                 break;
             }
@@ -239,25 +263,29 @@ public class MovieProvider extends ContentProvider {
             case MOVIE_SUMMARY:
                 try {
                     //TODO: store total pages and total results (maybe in app settings)
-                    int page = values[0].getAsInteger(MovieContract.MovieSummaryEntry.PAGINATION_CURRENT_PAGE);
-                    int totalPages = values[0].getAsInteger(MovieContract.MovieSummaryEntry.PAGINATION_TOTAL_PAGES);
-                    int totalResults = values[0].getAsInteger(MovieContract.MovieSummaryEntry.PAGINATION_TOTAL_RESULTS);
-                    int sortType = values[0].getAsInteger(MovieContract.MovieSummaryEntry.SORT_TYPE);
+                    int page = values[0].getAsInteger(MovieContract.MovieOrderEntry.PAGINATION_CURRENT_PAGE);
+                    int totalPages = values[0].getAsInteger(MovieContract.MovieOrderEntry.PAGINATION_TOTAL_PAGES);
+                    int totalResults = values[0].getAsInteger(MovieContract.MovieOrderEntry.PAGINATION_TOTAL_RESULTS);
+                    int sortType = values[0].getAsInteger(MovieContract.MovieOrderEntry.SORT_TYPE);
+                    long operationid = values[0].getAsLong(MovieContract.MovieOrderEntry.OPERATION_ID);
 
                     DbService service = new DbService();
+
+                    SyncOperation sync = service.GetSyncOperationById(operationid);
 
                     service.DeleteMovieOrder(page, sortType);
 
                     for (int i = 1; i < values.length; i++) {
-                        MovieSummary movieSummary = getMovieSummary(service, values[i]);
+                        MovieSummary movieSummary = DataTransformer.getMovieSummary(service, values[i]);
                         service.InsertMovieSummary(movieSummary);
 
                         MovieOrder movieOrder = new MovieOrder();
                         movieOrder.setDateUpdated(MovieContract.normalizeDate(System.currentTimeMillis()));
                         movieOrder.setMovieSummary(movieSummary);
                         movieOrder.setPage(page);
-                        movieOrder.setPosition(values[i].getAsInteger(MovieContract.MovieSummaryEntry.MOVIE_SUMMARY_POSITION));
+                        movieOrder.setPosition(values[i].getAsInteger(MovieContract.MovieOrderEntry.MOVIE_SUMMARY_POSITION));
                         movieOrder.setSortType(sortType);
+                        movieOrder.setSyncOperation(sync);
 
                         service.InsertMovieOrder(movieOrder, movieSummary);
                         nInsert++;
@@ -276,45 +304,7 @@ public class MovieProvider extends ContentProvider {
         return nInsert;
     }
 
-    private MovieSummary getMovieSummary(DbService service, ContentValues values) {
-        long movieId = values.getAsLong(MovieSummary$Table.MOVIEID);
-        MovieSummary movieSummary = service.GetMovieSummaryByMovieId(movieId);
 
-        if (null == movieSummary) {
-            movieSummary = new MovieSummary();
-            movieSummary.setDateUpdated(System.currentTimeMillis());
-        }
-
-        movieSummary.setMovieId(values.getAsInteger(MovieSummary$Table.MOVIEID));
-        movieSummary.setOriginalTitle(values.getAsString(MovieSummary$Table.ORIGINALTITLE));
-        movieSummary.setTitle(values.getAsString(MovieSummary$Table.TITLE));
-        movieSummary.setPosterPath(values.getAsString(MovieSummary$Table.POSTERPATH));
-        movieSummary.setPopularity(values.getAsDouble(MovieSummary$Table.POPULARITY));
-        movieSummary.setVoteAverage(values.getAsDouble(MovieSummary$Table.VOTEAVERAGE));
-        movieSummary.setVoteCount(values.getAsInteger(MovieSummary$Table.VOTECOUNT));
-        movieSummary.setBackdropPath(values.getAsString(MovieSummary$Table.BACKDROPPATH));
-        movieSummary.setOverview(values.getAsString(MovieSummary$Table.OVERVIEW));
-
-        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
-        try {
-            String sDate = values.getAsString(MovieSummary$Table.RELEASEDATE);
-            Date dt = null;
-            if (null != sDate) {
-                dt = f.parse(sDate);
-
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(dt);
-
-                movieSummary.setYearOfRelease(cal.get(Calendar.YEAR));
-            }
-            movieSummary.setReleaseDate(null == dt ? MovieContract.normalizeDate(System.currentTimeMillis()) :
-                    MovieContract.normalizeDate(dt.getTime()));
-        } catch (ParseException exex) {
-            movieSummary.setReleaseDate(MovieContract.normalizeDate(System.currentTimeMillis()));
-        }
-
-        return movieSummary;
-    }
 
     // You do not need to call this method. This is a method specifically to assist the testing
     // framework in running smoothly. You can read more at:

@@ -12,6 +12,10 @@ import retrofit.http.Query;
 /**
  * Created by ioanagosman on 28/09/15.
  */
+
+/**
+ * Interface used by Retrofit to call the movie db rest api
+ */
 public interface IApiMethods {
 
     @GET(RestApiContract.CONFIGURATION_PATH)

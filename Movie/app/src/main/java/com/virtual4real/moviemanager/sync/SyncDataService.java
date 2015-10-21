@@ -9,9 +9,14 @@ import android.content.Context;
 import android.content.SyncResult;
 import android.database.Cursor;
 import android.net.Uri;
+import android.widget.Toast;
 
 import com.virtual4real.moviemanager.R;
+import com.virtual4real.moviemanager.Utils;
 import com.virtual4real.moviemanager.data.MovieContract;
+import com.virtual4real.moviemanager.database.MovieOrder$Table;
+import com.virtual4real.moviemanager.database.SyncOperation;
+import com.virtual4real.moviemanager.database.SyncOperation$Table;
 import com.virtual4real.moviemanager.database.UrlSettings$Table;
 import com.virtual4real.moviemanager.sync.poco.JsnMovieDetail;
 import com.virtual4real.moviemanager.sync.poco.JsnMovieSummaryResult;
@@ -26,6 +31,11 @@ import retrofit.client.Response;
 
 /**
  * Created by ioanagosman on 16/10/15.
+ */
+
+/**
+ * The class contains the logic for synchronization with the rest api.
+ * Its methods are called from the MovieManagerSyncAdapter
  */
 public class SyncDataService {
     private static final long DAY_IN_MILLIS = 1000 * 60 * 60 * 24;
@@ -48,6 +58,34 @@ public class SyncDataService {
         IApiMethods methods = restAdapter.create(IApiMethods.class);
     }
 
+    public long GetOperationIdForParameters(SearchParameters sch) {
+        Cursor cursor = ctx.getContentResolver().query(MovieContract.SyncOperationEntry.CONTENT_URI, null, null,
+                new String[]{sch.getMaxDate(), sch.getMinDate(),
+                        Integer.toString(sch.getMinVotes()), Boolean.toString(sch.isIncludesAdult()),
+                        Boolean.toString(sch.isIncludesVideo())}, null);
+
+        long nResult = 0;
+
+        if (cursor.moveToFirst()) {
+            nResult = cursor.getLong(cursor.getColumnIndex(SyncOperation$Table.ID));
+        }
+
+        cursor.close();
+
+        return nResult;
+
+    }
+
+    public long InsertNewSyncOperation(SearchParameters sch) {
+        Uri uri = ctx.getContentResolver().insert(MovieContract.SyncOperationEntry.CONTENT_URI,
+                DataTransformer.getSyncOperationContentValues(sch));
+
+        return Long.parseLong(uri.getLastPathSegment());
+    }
+
+    private int DeleteAllMovieOrderData() {
+        return ctx.getContentResolver().delete(MovieContract.SyncOperationEntry.CONTENT_URI, null, null);
+    }
 
     public void syncMovieSummary(Account account, String authority, ContentProviderClient provider,
                                  SyncResult syncResult, SearchParameters sch) {
@@ -62,30 +100,39 @@ public class SyncDataService {
                 .build();
         IApiMethods methods = restAdapter.create(IApiMethods.class);
 
-        if (null == sOrder) {
+        long nOperationId = GetOperationIdForParameters(sch);
+        if (0 == nOperationId) {
+            DeleteAllMovieOrderData();
+            bCallAll = true;
+            nOperationId = InsertNewSyncOperation(sch);
+        }
+
+        if (!bCallAll && null == sOrder) {
             bCallAll = true;
         } else {
-            getMoviesByPageAndSortOrder(methods, nPage, getRestApiSortOrder(sOrder), sch, true);
-            getMoviesByPageAndSortOrder(methods, nPage + 1, getRestApiSortOrder(sOrder), sch, true);
+            //Utils.SendNotification(ctx, "Popular Movies", "Get movies by sort order and page");
+            getMoviesByPageAndSortOrder(methods, nPage, getRestApiSortOrder(sOrder), sch, true, nOperationId);
+            getMoviesByPageAndSortOrder(methods, nPage + 1, getRestApiSortOrder(sOrder), sch, true, nOperationId);
         }
 
         if (bCallAll) {
+            //Utils.SendNotification(ctx, "Popular Movies", "Get movies all movies");
             getSettings(methods);
 
-            getAllMovies(methods, nPage, sch, true);
-            getAllMovies(methods, nPage + 1, sch, true);
+            getAllMovies(methods, nPage, sch, true, nOperationId);
+            getAllMovies(methods, nPage + 1, sch, true, nOperationId);
         }
 
     }
 
 
-    private void getAllMovies(IApiMethods methods, int nPage, SearchParameters sch, final boolean notifyContentChange) {
-        getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_POPULARITY_ASC, sch, false);
-        getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_POPULARITY_DESC, sch, false);
-        getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_VOTE_ASC, sch, false);
-        getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_VOTE_DESC, sch, false);
-        getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_RELEASE_ASC, sch, false);
-        getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_RELEASE_DESC, sch, false);
+    private void getAllMovies(IApiMethods methods, int nPage, SearchParameters sch, final boolean notifyContentChange, long nOperationId) {
+        getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_POPULARITY_ASC, sch, false, nOperationId);
+        getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_POPULARITY_DESC, sch, false, nOperationId);
+        getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_VOTE_ASC, sch, false, nOperationId);
+        getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_VOTE_DESC, sch, false, nOperationId);
+        getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_RELEASE_ASC, sch, false, nOperationId);
+        getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_RELEASE_DESC, sch, false, nOperationId);
 
         if (notifyContentChange) {
             ctx.getContentResolver().notifyChange(MovieContract.MovieSummaryEntry.CONTENT_URI, null, false);
@@ -93,7 +140,30 @@ public class SyncDataService {
     }
 
     private void getMoviesByPageAndSortOrder(IApiMethods methods, int nPage, final String sSortOrder,
-                                             SearchParameters sch, final boolean notifyContentChange) {
+                                             SearchParameters sch, final boolean notifyContentChange, final long nOperationId) {
+
+        boolean bGetFromService = false;
+        Cursor cursor =
+                ctx.getContentResolver().query(MovieContract.MovieOrderEntry.CONTENT_URI, null, null,
+                        new String[]{Integer.toString(nPage), sSortOrder}, null);
+        if (null != cursor && cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+                long nTime = cursor.getLong(cursor.getColumnIndex(MovieOrder$Table.DATEUPDATED));
+                if (System.currentTimeMillis() - nTime >= DAY_IN_MILLIS) {
+                    bGetFromService = true;
+                    break;
+                }
+            }
+
+            cursor.close();
+        } else {
+            bGetFromService = true;
+        }
+
+        if (!bGetFromService) {
+            return;
+        }
+
         Callback callbackMovieSummary = new Callback() {
             @Override
             public void success(Object o, Response response) {
@@ -105,7 +175,7 @@ public class SyncDataService {
                                 movieResult.getTotal_results(),
                                 movieResult.getTotal_pages(),
                                 movieResult.getPage(), sSortOrder,
-                                movieResult.getResults());
+                                movieResult.getResults(), nOperationId);
 
 
                 int nInserted = ctx.getContentResolver().bulkInsert(
@@ -120,9 +190,10 @@ public class SyncDataService {
 
             @Override
             public void failure(RetrofitError retrofitError) {
-
+                Utils.SendNotification(ctx, "Popular Movies", "Failure to get movies - " + retrofitError.getMessage());
             }
         };
+
         methods.getMovieSummary(API_KEY_VALUE, sSortOrder, nPage, sch.getMinDate(), sch.getMaxDate(),
                 sch.getMinVotes(), sch.isIncludesVideo(), sch.isIncludesAdult(), callbackMovieSummary);
 
@@ -181,7 +252,7 @@ public class SyncDataService {
 
             @Override
             public void failure(RetrofitError retrofitError) {
-
+                Utils.SendNotification(ctx, "Popular Movies", "Failure to get settings - " + retrofitError.getMessage());
             }
         };
         methods.getSettings(API_KEY_VALUE, callbackSettings);
@@ -225,23 +296,13 @@ public class SyncDataService {
             public void success(Object o, Response response) {
                 JsnMovieDetail movieDetailResult = (JsnMovieDetail) o;
 
-
-                //ContentValues[] movieValues =
-                //        getMovieSummaryContentValues(movieDetailResult);
-
-                //int nInserted = getContext().getContentResolver().bulkInsert(
-                //        MovieContract.MovieDetailEntry.CONTENT_URI,
-                //        movieValues
-                //);
-
-
-                //getContext().getContentResolver().notifyChange(MovieContract.MovieSummaryEntry.CONTENT_URI, null, false);
-
+                //getContext().getContentResolver()
+                // .notifyChange(MovieContract.MovieSummaryEntry.CONTENT_URI, null, false);
             }
 
             @Override
             public void failure(RetrofitError retrofitError) {
-
+                Utils.SendNotification(ctx, "Popular Movies", "Failure to get movie detail - " + retrofitError.getMessage());
             }
         };
         methods.getMovieDetail(nMovieId, API_KEY_VALUE, callbackMovieDetail);

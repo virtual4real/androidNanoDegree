@@ -1,6 +1,12 @@
 <resources>
 
-    <color name="primary">#795548</color>
-    <color name="primary_dark">#5D4037</color>
-    <color name="primary_bar">#955D4037</color>
+    <color name="primary">#ff64c2f4</color>
+    <color name="primary_dark">#0288D1</color>
+    <color name="primary_bar">#ff1ca8f4</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="grey">#cccccc</color>
+    <color name="grey_700">#646464</color>
+    <color name="black">#000000</color>
+
 </resources>

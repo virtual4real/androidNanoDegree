@@ -3,6 +3,10 @@ package com.virtual4real.moviemanager.sync.restapi;
 /**
  * Created by ioanagosman on 02/10/15.
  */
+
+/**
+ * contract defining the movie db rest api path and paramters
+ */
 public class RestApiContract {
     public static final String CONFIGURATION_PATH = "/configuration";
     public static final String MOVIE_LIST_PATH = "/discover/movie";
@@ -26,7 +30,6 @@ public class RestApiContract {
     public static final String SORT_KEY_RELEASE_ASC = "release_date.asc";
     public static final String SORT_KEY_RELEASE_DESC = "release_date.desc";
 
-    //TODO: get base url from where is taken for other services calls -- unify
     public static final String IMAGE_BASE_URL_DEFAULT = "http://image.tmdb.org/t/p/w300";
 
 }

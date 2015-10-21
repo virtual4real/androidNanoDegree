@@ -8,6 +8,12 @@ import com.raizlabs.android.dbflow.structure.BaseModel;
 /**
  * Created by ioanagosman on 12/10/15.
  */
+
+/**
+ * SyncOperation contains the common parameters used to query the
+ * rest api for data (min date, max date, min votes, adult and video).
+ * Parameters regarding the sort type and the page are stored in MovieOrder table.
+ */
 @Table(databaseName = MovieDatabase.NAME)
 public class SyncOperation extends BaseModel {
     @Column

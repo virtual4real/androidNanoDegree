@@ -3,6 +3,10 @@ package com.virtual4real.moviemanager.sync.poco;
 /**
  * Created by ioanagosman on 01/10/15.
  */
+
+/**
+ * JsonObject returned by the movie db rest api
+ */
 public class JsnMovieSummary {
     private String vote_average;
 

@@ -16,6 +16,8 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 import com.virtual4real.moviemanager.data.MovieContract;
 import com.virtual4real.moviemanager.database.MovieSummary;
@@ -121,11 +123,25 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
             String sPath = data.getString(data.getColumnIndex(MovieSummary$Table.BACKDROPPATH));
 
             if (null != sPath) {
+                mImgPlaceholder.setVisibility(View.INVISIBLE);
                 sPath = Utils.getBackdropImageUrl(getContext()) + sPath;
 
                 Picasso.with(getContext())
                         .load(sPath)
-                        .into(mImgPlaceholder);
+                        .networkPolicy(
+                                Utils.isConnected(getContext()) ?
+                                        NetworkPolicy.NO_CACHE : NetworkPolicy.OFFLINE)
+                        .into(mImgPlaceholder, new Callback() {
+                            @Override
+                            public void onSuccess() {
+                                mImgPlaceholder.setVisibility(View.VISIBLE);
+                            }
+
+                            @Override
+                            public void onError() {
+
+                            }
+                        });
             } else {
                 mImgPlaceholder.setVisibility(View.GONE);
             }
@@ -137,6 +153,9 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
 
                 Picasso.with(getContext())
                         .load(sPath)
+                        .networkPolicy(
+                                Utils.isConnected(getContext()) ?
+                                        NetworkPolicy.NO_CACHE : NetworkPolicy.OFFLINE)
                         .into(mImgThumbnail);
             } else {
                 mImgThumbnail.setVisibility(View.INVISIBLE);

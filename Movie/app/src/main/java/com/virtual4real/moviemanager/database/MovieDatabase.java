@@ -5,6 +5,10 @@ import com.raizlabs.android.dbflow.annotation.Database;
 /**
  * Created by ioanagosman on 30/09/15.
  */
+
+/**
+ * Defines the database name and version and it is used by DBFlow
+ */
 @Database(name = MovieDatabase.NAME, version = MovieDatabase.VERSION)
 public class MovieDatabase {
 

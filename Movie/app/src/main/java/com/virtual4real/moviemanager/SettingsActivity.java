@@ -95,6 +95,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
 
     //TODO: call resync when a value is modified
+    //TODO: fix bug on no votes changed in settings (app will not load anymore)
     private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
