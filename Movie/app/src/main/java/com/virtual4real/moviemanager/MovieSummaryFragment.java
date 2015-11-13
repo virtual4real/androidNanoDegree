@@ -1,45 +1,39 @@
 package com.virtual4real.moviemanager;
 
-import android.content.res.Configuration;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
-
-import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.CompoundButton;
-import android.widget.ListView;
-import android.widget.Switch;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.virtual4real.moviemanager.data.MovieContract;
-import com.virtual4real.moviemanager.database.MovieSummary$Table;
-import com.virtual4real.moviemanager.database.UrlSettings;
-import com.virtual4real.moviemanager.database.UrlSettings$Table;
+import com.virtual4real.moviemanager.data.MovieProvider;
+import com.virtual4real.moviemanager.database.UrlSettingsColumns;
 import com.virtual4real.moviemanager.sync.MovieManagerSyncAdapter;
 import com.virtual4real.moviemanager.sync.SearchParameters;
 import com.virtual4real.moviemanager.sync.SyncDataService;
 import com.virtual4real.moviemanager.sync.restapi.RestApiContract;
 
 import java.util.regex.Pattern;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -58,10 +52,14 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         }
     }
 
+    @Bind(R.id.recycler_view)
     RecyclerView mRecyclerView;
+
     RecyclerView.LayoutManager mLayoutManager;
     RecyclerView.Adapter mAdapter;
     SummaryImageSize summ;
+
+    public ToggleButton switchAB;
 
     private ContentObserver mObserver;
 
@@ -82,8 +80,9 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
                 //Log.d("ONCHANGE", "ONCHANGE_______________");
             }
         };
+        //REPLACED: MovieContract.MovieSummaryEntry.CONTENT_URI
         getActivity().getContentResolver()
-                .registerContentObserver(MovieContract.MovieSummaryEntry.CONTENT_URI, true, mObserver);
+                .registerContentObserver(MovieProvider.getMovieSummaryUri(), true, mObserver);
     }
 
     @Override
@@ -194,8 +193,13 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         }
 
 
-        return new CursorLoader(getActivity(), MovieContract.MovieSummaryEntry.CONTENT_URI, null, null,
-                new String[]{Integer.toString(1), sortOrder}, null);
+        //TODO: set order by position
+        //REPLACED: MovieContract.MovieSummaryEntry.CONTENT_URI
+        int nSortType = MovieProvider.MovieOrderHelper.GetSortTypeInt(sortOrder);
+        return new CursorLoader(getActivity(), MovieProvider.buildMovieSummaryUri(1, nSortType),
+                MovieProvider.getMovieSummaryProjection(),
+                null, null, null);
+
 
     }
 
@@ -210,8 +214,8 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_movie_summary, container, false);
 
+        ButterKnife.bind(this, rootView);
         // Calling the RecyclerView
-        mRecyclerView = (RecyclerView) rootView.findViewById(R.id.recycler_view);
         if (null != mRecyclerView) {
             mRecyclerView.setHasFixedSize(true);
 
@@ -240,7 +244,8 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         int nMinWidth = (int) getResources().getDimension(R.dimen.card_view_width_min);
         float nRatio = Float.parseFloat(getResources().getString(R.string.card_view_image_ratio));
         int nSpace = (int) getResources().getDimension(R.dimen.card_view_space);
-        int nTextHeight = (int) getResources().getDimension(R.dimen.card_view_text_height);
+        int nTextHeight = (int) getResources().getDimension(R.dimen.card_view_rating_height);
+        //(int) getResources().getDimension(R.dimen.card_view_text_height);
 
         int nColumns = 1;
 
@@ -265,20 +270,24 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         try {
             String strUrl = null;
 
+            //REPLACED: MovieContract.SettingEntry.CONTENT_URI
             Cursor cursor = getContext().getContentResolver()
-                    .query(MovieContract.SettingEntry.CONTENT_URI, null, null, null, null);
+                    .query(MovieProvider.getSeetingsUri(),
+                            new String[]{UrlSettingsColumns.BASE_URL, UrlSettingsColumns.LOGO_SIZE_URL,
+                                    UrlSettingsColumns.BACKDROP_SIZE_URL},
+                            null, null, null);
             if (0 == cursor.getCount()) {
                 Utils.setBaseImageUrl(getContext(), RestApiContract.IMAGE_BASE_URL_DEFAULT);
             }
 
             if (cursor.moveToFirst()) {
-                String strBaseUrl = cursor.getString(cursor.getColumnIndex(UrlSettings$Table.BASEURL));
-                strUrl = getPathBySize(cursor, UrlSettings$Table.LOGOSIZEURL, strBaseUrl);
+                String strBaseUrl = cursor.getString(cursor.getColumnIndex(UrlSettingsColumns.BASE_URL));
+                strUrl = getPathBySize(cursor, UrlSettingsColumns.LOGO_SIZE_URL, strBaseUrl);
                 if (null != strUrl) {
                     Utils.setBaseImageUrl(getContext(), strUrl);
                 }
 
-                strUrl = getPathBySize(cursor, UrlSettings$Table.BACKDROPSIZEURL, strBaseUrl);
+                strUrl = getPathBySize(cursor, UrlSettingsColumns.BACKDROP_SIZE_URL, strBaseUrl);
                 if (null != strUrl) {
                     Utils.setBackdropImageUrl(getContext(), strUrl);
                 }
@@ -352,12 +361,6 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         //TODO: checkout the position in the model application
-//        mForecastAdapter.swapCursor(data);
-//        if (mPosition != ListView.INVALID_POSITION) {
-//            // If we don't need to restart the loader, and there's a desired position to restore
-//            // to, do so now.
-//            mListView.smoothScrollToPosition(mPosition);
-//        }
 
         mAdapter = new MovieGridAdapter(getContext(), data, (Callback) getActivity(),
                 summ.NoSpaces, summ.Width, summ.Height, summ.TextHeight);
@@ -369,27 +372,20 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         //mForecastAdapter.swapCursor(null);
         mAdapter = new MovieGridAdapter(getContext(), null, (Callback) getActivity(),
                 summ.NoSpaces, summ.Width, summ.Height, summ.TextHeight);
-        mRecyclerView.setAdapter(mAdapter);
+
+        if (null != mRecyclerView) {
+            mRecyclerView.setAdapter(mAdapter);
+        }
     }
 
 
-//    private void setInternalCursor(){
-//        String sortOrder = Utils.getOrderAndSortFromPreferences(getContext());
-//        //TODO: set the page in the selection string of the query call in the content provider
-//        Cursor cursor =
-//                getContext().getContentResolver()
-//                        .query(MovieContract.MovieSummaryEntry.CONTENT_URI, null, null, null, sortOrder);
-//
-//        if(null != cursor){
-//            Log.d("CURSOR___", Integer.toString(cursor.getCount()));
-//        }
-//
-//
-//        mAdapter = new MovieGridAdapter(getContext(), cursor, (Callback)getActivity());
-//        mRecyclerView.setAdapter(mAdapter);
-//    }
-
     public interface Callback {
         public void onItemSelected(Uri dateUri);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ButterKnife.unbind(this);
     }
 }

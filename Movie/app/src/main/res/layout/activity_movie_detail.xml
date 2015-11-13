@@ -3,6 +3,7 @@
     android:id="@+id/movie_detail_container"
     tools:context="com.virtual4real.moviemanager.MovieDetailActivity"
     tools:ignore="MergeRootFrame"
+    android:theme="@style/AppThemeDetail"
     android:layout_width="match_parent"
     android:layout_height="match_parent" />
 

@@ -28,7 +28,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="227dp"
                 android:scaleType="fitXY"
-
                 android:layout_alignParentTop="true"
                 android:layout_alignParentStart="true" />
 
@@ -46,6 +45,24 @@
                 android:layout_alignParentRight="false"
                 android:layout_alignParentEnd="false"
                 android:layout_centerHorizontal="true">
+
+                <TextView
+                    android:id="@+id/tv_error"
+                    android:layout_width="fill_parent"
+                    android:layout_height="@dimen/card_view_text_height"
+                    android:layout_marginBottom="2dp"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="2dp"
+                    android:layout_gravity="bottom"
+                    android:gravity="center_vertical"
+                    android:background="#ff444444"
+                    android:textColor="#fff"
+                    android:textSize="12sp"
+                    android:text=""
+                    android:layout_alignParentBottom="false"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentEnd="false"
+                    android:layout_above="@+id/tv_year" />
 
                 <TextView
                     android:id="@+id/tv_species"

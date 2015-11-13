@@ -9,15 +9,14 @@ import android.content.Context;
 import android.content.SyncResult;
 import android.database.Cursor;
 import android.net.Uri;
-import android.widget.Toast;
 
 import com.virtual4real.moviemanager.R;
 import com.virtual4real.moviemanager.Utils;
-import com.virtual4real.moviemanager.data.MovieContract;
-import com.virtual4real.moviemanager.database.MovieOrder$Table;
-import com.virtual4real.moviemanager.database.SyncOperation;
-import com.virtual4real.moviemanager.database.SyncOperation$Table;
-import com.virtual4real.moviemanager.database.UrlSettings$Table;
+import com.virtual4real.moviemanager.data.MovieProvider;
+import com.virtual4real.moviemanager.database.MovieOrderColumns;
+import com.virtual4real.moviemanager.database.MovieSummaryColumns;
+import com.virtual4real.moviemanager.database.SyncOperationColumns;
+import com.virtual4real.moviemanager.database.UrlSettingsColumns;
 import com.virtual4real.moviemanager.sync.poco.JsnMovieDetail;
 import com.virtual4real.moviemanager.sync.poco.JsnMovieSummaryResult;
 import com.virtual4real.moviemanager.sync.poco.JsnSettings;
@@ -58,16 +57,25 @@ public class SyncDataService {
         IApiMethods methods = restAdapter.create(IApiMethods.class);
     }
 
+
+    //REPLACED:  MovieContract.SyncOperationEntry.CONTENT_URI
     public long GetOperationIdForParameters(SearchParameters sch) {
-        Cursor cursor = ctx.getContentResolver().query(MovieContract.SyncOperationEntry.CONTENT_URI, null, null,
-                new String[]{sch.getMaxDate(), sch.getMinDate(),
-                        Integer.toString(sch.getMinVotes()), Boolean.toString(sch.isIncludesAdult()),
-                        Boolean.toString(sch.isIncludesVideo())}, null);
+        Integer nAdult = sch.isIncludesAdult() ? 1 : 0;
+        Integer nVideo = sch.isIncludesVideo() ? 1 : 0;
+
+        Cursor cursor = ctx.getContentResolver().query(MovieProvider.getOperationUri(),
+                new String[]{SyncOperationColumns.ID},
+                SyncOperationColumns.DATE_START + " = ? AND " + SyncOperationColumns.DATE_END + " = ? AND " +
+                        SyncOperationColumns.NO_OF_VOTES + " = ? AND " +
+                        SyncOperationColumns.IS_ADULT + " = ? AND " + SyncOperationColumns.IS_VIDEO + " = ?",
+                new String[]{sch.getMinDate(), sch.getMaxDate(),
+                        Integer.toString(sch.getMinVotes()),
+                        nAdult.toString(), nVideo.toString()}, null);
 
         long nResult = 0;
 
         if (cursor.moveToFirst()) {
-            nResult = cursor.getLong(cursor.getColumnIndex(SyncOperation$Table.ID));
+            nResult = cursor.getLong(cursor.getColumnIndex(SyncOperationColumns.ID));
         }
 
         cursor.close();
@@ -76,15 +84,16 @@ public class SyncDataService {
 
     }
 
+    //REPLACED: MovieContract.SyncOperationEntry.CONTENT_URI
     public long InsertNewSyncOperation(SearchParameters sch) {
-        Uri uri = ctx.getContentResolver().insert(MovieContract.SyncOperationEntry.CONTENT_URI,
+        Uri uri = ctx.getContentResolver().insert(MovieProvider.getOperationUri(),
                 DataTransformer.getSyncOperationContentValues(sch));
 
         return Long.parseLong(uri.getLastPathSegment());
     }
 
     private int DeleteAllMovieOrderData() {
-        return ctx.getContentResolver().delete(MovieContract.SyncOperationEntry.CONTENT_URI, null, null);
+        return ctx.getContentResolver().delete(MovieProvider.getOperationUri(), null, null);
     }
 
     public void syncMovieSummary(Account account, String authority, ContentProviderClient provider,
@@ -107,12 +116,13 @@ public class SyncDataService {
             nOperationId = InsertNewSyncOperation(sch);
         }
 
-        if (!bCallAll && null == sOrder) {
+        if (!bCallAll || null == sOrder) {
             bCallAll = true;
         } else {
             //Utils.SendNotification(ctx, "Popular Movies", "Get movies by sort order and page");
             getMoviesByPageAndSortOrder(methods, nPage, getRestApiSortOrder(sOrder), sch, true, nOperationId);
             getMoviesByPageAndSortOrder(methods, nPage + 1, getRestApiSortOrder(sOrder), sch, true, nOperationId);
+            bCallAll = false;
         }
 
         if (bCallAll) {
@@ -134,21 +144,27 @@ public class SyncDataService {
         getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_RELEASE_ASC, sch, false, nOperationId);
         getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_RELEASE_DESC, sch, false, nOperationId);
 
+        //REPLACED: MovieContract.MovieSummaryEntry.CONTENT_URI
         if (notifyContentChange) {
-            ctx.getContentResolver().notifyChange(MovieContract.MovieSummaryEntry.CONTENT_URI, null, false);
+            ctx.getContentResolver().notifyChange(MovieProvider.getMovieSummaryUri(), null, false);
         }
     }
 
     private void getMoviesByPageAndSortOrder(IApiMethods methods, int nPage, final String sSortOrder,
                                              SearchParameters sch, final boolean notifyContentChange, final long nOperationId) {
 
+        //REPLACED: MovieContract.MovieOrderEntry.CONTENT_URI
         boolean bGetFromService = false;
+        int nSortType = MovieProvider.MovieOrderHelper.GetSortTypeInt(sSortOrder);
         Cursor cursor =
-                ctx.getContentResolver().query(MovieContract.MovieOrderEntry.CONTENT_URI, null, null,
-                        new String[]{Integer.toString(nPage), sSortOrder}, null);
+                ctx.getContentResolver().query(MovieProvider.getMovieOrderUri(),
+                        new String[]{MovieOrderColumns.DATE_UPDATED},
+                        MovieOrderColumns.PAGE + " = ? AND " + MovieOrderColumns.SORT_TYPE + " = ? ",
+                        new String[]{Integer.toString(nPage), Integer.toString(nSortType)}, null);
+
         if (null != cursor && cursor.getCount() > 0) {
             while (cursor.moveToNext()) {
-                long nTime = cursor.getLong(cursor.getColumnIndex(MovieOrder$Table.DATEUPDATED));
+                long nTime = cursor.getLong(cursor.getColumnIndex(MovieOrderColumns.DATE_UPDATED));
                 if (System.currentTimeMillis() - nTime >= DAY_IN_MILLIS) {
                     bGetFromService = true;
                     break;
@@ -169,22 +185,59 @@ public class SyncDataService {
             public void success(Object o, Response response) {
                 JsnMovieSummaryResult movieResult = (JsnMovieSummaryResult) o;
 
+                int nSortType = MovieProvider.MovieOrderHelper.GetSortTypeInt(sSortOrder);
+                int nTotalResults = Integer.parseInt(movieResult.getTotal_results());
+                int nTotalPages = Integer.parseInt(movieResult.getTotal_pages());
+                int nPage = Integer.parseInt(movieResult.getPage());
+
+                int nDeleted = ctx.getContentResolver().delete(MovieProvider.getMovieOrderUri(),
+                        MovieOrderColumns.PAGE + " = ? AND " + MovieOrderColumns.SORT_TYPE + " = ?",
+                        new String[]{Integer.toString(nPage), Integer.toString(nSortType)});
+
 
                 ContentValues[] movieValues =
-                        DataTransformer.getMovieSummaryContentValues(
-                                movieResult.getTotal_results(),
-                                movieResult.getTotal_pages(),
-                                movieResult.getPage(), sSortOrder,
-                                movieResult.getResults(), nOperationId);
+                        DataTransformer.getMovieSummaryContentValues(movieResult.getResults());
 
+                for (int i = 0; i < movieValues.length; i++) {
+                    String nMovieId = (String) movieValues[i].get(MovieSummaryColumns.MOVIE_ID);
+                    long nMovieSummaryId = 0;
 
-                int nInserted = ctx.getContentResolver().bulkInsert(
-                        MovieContract.MovieSummaryEntry.CONTENT_URI,
-                        movieValues
-                );
+                    Cursor crs = ctx.getContentResolver().query(MovieProvider.getMovieSummaryUri(),
+                            new String[]{MovieSummaryColumns.ID},
+                            MovieSummaryColumns.MOVIE_ID + " = ?",
+                            new String[]{nMovieId}, null, null);
 
+                    if (null != crs && 0 != crs.getCount()) {
+                        crs.moveToFirst();
+
+                        nMovieSummaryId = crs.getLong(crs.getColumnIndex(MovieSummaryColumns.ID));
+
+                        crs.close();
+
+                        ctx.getContentResolver().update(MovieProvider.getMovieSummaryUri(), movieValues[i],
+                                MovieSummaryColumns.MOVIE_ID + " = ?",
+                                new String[]{nMovieId});
+                    } else {
+                        Uri uriNewMovieProvider =
+                                ctx.getContentResolver().insert(MovieProvider.getMovieSummaryUri(), movieValues[i]);
+                        nMovieSummaryId = MovieProvider.getMovieSummaryId(uriNewMovieProvider);
+                    }
+
+                    ContentValues cvMovieOrder =
+                            DataTransformer.getMovieOrderContentValues(nPage, nSortType, nOperationId, nMovieSummaryId, i);
+                    ctx.getContentResolver().insert(MovieProvider.getMovieOrderUri(), cvMovieOrder);
+
+                }
+
+//REPLACED: MovieContract.MovieSummaryEntry.CONTENT_URI,
+//                int nInserted = ctx.getContentResolver().bulkInsert(
+//                        MovieProvider.getMovieSummaryUri(),
+//                        movieValues
+//                );
+
+                //REPLACED: MovieContract.MovieSummaryEntry.CONTENT_URI
                 if (notifyContentChange) {
-                    ctx.getContentResolver().notifyChange(MovieContract.MovieSummaryEntry.CONTENT_URI, null, false);
+                    ctx.getContentResolver().notifyChange(MovieProvider.getMovieSummaryUri(), null, false);
                 }
             }
 
@@ -201,6 +254,11 @@ public class SyncDataService {
 
 
     private String getTypeOfOrder(String sInterface, String sOrder, String asc, String desc) {
+        if (null == sInterface) {
+            String str = "bla bla";
+            str = null;
+        }
+
         if (sInterface.startsWith(sOrder)) {
             return getAscOrDesc(sInterface, asc, desc);
         }
@@ -217,15 +275,16 @@ public class SyncDataService {
     private void getSettings(IApiMethods methods) {
         boolean bExecute = false;
 
+        //REPLACED: MovieContract.SettingEntry.CONTENT_URI
         Cursor cursor = ctx.getContentResolver()
-                .query(MovieContract.SettingEntry.CONTENT_URI, null, null, null, null);
+                .query(MovieProvider.getSeetingsUri(), null, null, null, null);
         if (cursor.getCount() != 1) {
-            ctx.getContentResolver().delete(MovieContract.SettingEntry.CONTENT_URI, null, null);
+            ctx.getContentResolver().delete(MovieProvider.getSeetingsUri(), null, null);
             bExecute = true;
         } else {
             cursor.moveToFirst();
 
-            long nDateUpdate = cursor.getLong(cursor.getColumnIndex(UrlSettings$Table.DATEUPDATED));
+            long nDateUpdate = cursor.getLong(cursor.getColumnIndex(UrlSettingsColumns.DATE_UPDATED));
             bExecute = (System.currentTimeMillis() - nDateUpdate >= DAY_IN_MILLIS);
 
             cursor.close();
@@ -242,9 +301,9 @@ public class SyncDataService {
 
                 ContentValues settingsValues = DataTransformer.getSettingsContentValues(setting);
 
-
+//REPLACED: MovieContract.SettingEntry.CONTENT_URI
                 Uri insertedUri = ctx.getContentResolver().insert(
-                        MovieContract.SettingEntry.CONTENT_URI,
+                        MovieProvider.getSeetingsUri(),
                         settingsValues
                 );
                 long settingId = ContentUris.parseId(insertedUri);

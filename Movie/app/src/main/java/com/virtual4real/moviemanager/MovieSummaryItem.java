@@ -2,8 +2,8 @@ package com.virtual4real.moviemanager;
 
 import android.database.Cursor;
 
-import com.virtual4real.moviemanager.database.MovieSummary;
-import com.virtual4real.moviemanager.database.MovieSummary$Table;
+import com.virtual4real.moviemanager.database.MovieSummaryColumns;
+
 
 /**
  * Created by ioanagosman on 24/09/15.
@@ -58,11 +58,11 @@ public class MovieSummaryItem {
     public static MovieSummaryItem fromCursor(Cursor cursor) {
         MovieSummaryItem item = new MovieSummaryItem();
 
-        item.setName(cursor.getString(cursor.getColumnIndex(MovieSummary$Table.TITLE)));
-        item.setThumbnail(cursor.getString(cursor.getColumnIndex(MovieSummary$Table.POSTERPATH)));
-        item.setMovieId(cursor.getInt(cursor.getColumnIndex(MovieSummary$Table.MOVIEID)));
-        item.setRating(cursor.getFloat(cursor.getColumnIndex(MovieSummary$Table.VOTEAVERAGE)));
-        item.setYear(cursor.getInt(cursor.getColumnIndex(MovieSummary$Table.YEAROFRELEASE)));
+        item.setName(cursor.getString(cursor.getColumnIndex(MovieSummaryColumns.TITLE)));
+        item.setThumbnail(cursor.getString(cursor.getColumnIndex(MovieSummaryColumns.POSTER_PATH)));
+        item.setMovieId(cursor.getInt(cursor.getColumnIndex(MovieSummaryColumns.MOVIE_ID)));
+        item.setRating(cursor.getFloat(cursor.getColumnIndex(MovieSummaryColumns.VOTE_AVERAGE)));
+        item.setYear(cursor.getInt(cursor.getColumnIndex(MovieSummaryColumns.YEAR_OF_RELEASE)));
 
         return item;
     }

@@ -1,6 +1,5 @@
 package com.virtual4real.moviemanager;
 
-import android.app.ActionBar;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v7.widget.CardView;
@@ -17,7 +16,10 @@ import android.widget.TextView;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
-import com.virtual4real.moviemanager.data.MovieContract;
+import com.virtual4real.moviemanager.data.MovieProvider;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
 
 /**
  * Created by ioanagosman on 24/09/15.
@@ -42,22 +44,27 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
 
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
+        @Bind(R.id.img_card)
         public CardView cardView;
+        @Bind(R.id.img_thumbnail)
         public ImageView imgThumbnail;
+        @Bind(R.id.tv_species)
         public TextView tvTitle;
+        @Bind(R.id.tv_year)
         public TextView tvYear;
+        @Bind(R.id.ratingBar)
         public RatingBar rbRating;
+        @Bind(R.id.tv_error)
+        public TextView tvError;
 
         public ViewHolder(View view, int nWidth, int nHeight, int nTextHeight, int nSpace) {
             super(view);
-            cardView = (CardView) itemView.findViewById(R.id.img_card);
+            ButterKnife.bind(this, itemView);
             cardView.setLayoutParams(new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     nHeight
             ));
 
-
-            imgThumbnail = (ImageView) itemView.findViewById(R.id.img_thumbnail);
             imgThumbnail.setMaxWidth(nWidth);
             imgThumbnail.setMaxHeight(nHeight - nTextHeight);
             imgThumbnail.setLayoutParams(new RelativeLayout.LayoutParams(
@@ -65,9 +72,6 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
                     nHeight - nTextHeight
             ));
             imgThumbnail.setPadding(nSpace, nSpace, nSpace, nSpace);
-            tvTitle = (TextView) itemView.findViewById(R.id.tv_species);
-            tvYear = (TextView) itemView.findViewById(R.id.tv_year);
-            rbRating = (RatingBar) itemView.findViewById(R.id.ratingBar);
         }
 
 
@@ -94,15 +98,16 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
                 .networkPolicy(
                         Utils.isConnected(this.mContext) ?
                                 NetworkPolicy.NO_CACHE : NetworkPolicy.OFFLINE)
+                .error(R.id.tv_error)
                 .into(viewHolder.imgThumbnail, new Callback() {
                     @Override
                     public void onSuccess() {
-                        viewHolder.tvTitle.setVisibility(View.INVISIBLE);
+                        viewHolder.tvTitle.setVisibility(View.GONE);
+                        viewHolder.tvError.setVisibility(View.GONE);
                     }
 
                     @Override
                     public void onError() {
-
                     }
                 });
         viewHolder.imgThumbnail.setId(myListItem.getMovieId());
@@ -122,7 +127,7 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
             @Override
             public void onClick(View v) {
                 int nMovieId = v.getId();
-                mActivity.onItemSelected(MovieContract.MovieSummaryEntry.buildMovieSummaryUri(nMovieId));
+                mActivity.onItemSelected(MovieProvider.buildMovieSummaryUri(nMovieId));
             }
         };
 

@@ -2,10 +2,6 @@ package com.virtual4real.moviemanager.data;
 
 import android.test.AndroidTestCase;
 
-import com.raizlabs.android.dbflow.config.FlowManager;
-import com.virtual4real.moviemanager.database.DbService;
-import com.virtual4real.moviemanager.database.UrlSettings;
-
 /**
  * Created by ioanagosman on 01/10/15.
  */

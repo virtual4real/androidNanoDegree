@@ -14,7 +14,7 @@ import android.util.Log;
 
 import com.virtual4real.moviemanager.R;
 import com.virtual4real.moviemanager.Utils;
-import com.virtual4real.moviemanager.database.UrlSettings$Table;
+import com.virtual4real.moviemanager.database.UrlSettingsColumns;
 
 
 /**
@@ -36,8 +36,8 @@ public class MovieManagerSyncAdapter extends AbstractThreadedSyncAdapter {
 
 
     private static final String[] NOTIFY_WEATHER_PROJECTION = new String[]{
-            UrlSettings$Table.BASEURL,
-            UrlSettings$Table.SECUREBASEURL
+            UrlSettingsColumns.BASE_URL,
+            UrlSettingsColumns.SECURE_BASE_URL
     };
 
 

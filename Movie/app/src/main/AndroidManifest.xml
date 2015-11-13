@@ -27,7 +27,7 @@
         </activity>
 
         <provider
-            android:name=".data.MovieProvider"
+            android:name="com.virtual4real.moviemanager.provider.MovieProvider"
             android:authorities="@string/content_authority"
             android:exported="false"
             android:syncable="true" />
@@ -58,7 +58,8 @@
 
         <activity
             android:name=".MovieDetailActivity"
-            android:parentActivityName=".MovieSummaryActivity">
+            android:parentActivityName=".MovieSummaryActivity"
+            android:theme="@style/AppThemeDetail">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.virtual4real.moviemanager.MovieSummaryActivity" />

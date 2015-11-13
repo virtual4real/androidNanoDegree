@@ -2,13 +2,12 @@ package com.virtual4real.moviemanager;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.virtual4real.moviemanager.data.MovieContract;
+import com.virtual4real.moviemanager.data.MovieProvider;
 import com.virtual4real.moviemanager.sync.MovieManagerSyncAdapter;
 
 public class MovieSummaryActivity extends AppCompatActivity implements MovieSummaryFragment.Callback {
@@ -52,7 +51,7 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
     @Override
     public void onItemSelected(Uri dateUri) {
         //Log.d("CALLBACK", dateUri.toString());
-        long nMovieId = MovieContract.MovieSummaryEntry.getMovieSummaryId(dateUri);
+        long nMovieId = MovieProvider.getMovieSummaryId(dateUri);
         MovieManagerSyncAdapter.syncImmediately(getApplicationContext(), nMovieId);
         Intent intent = new Intent(this, MovieDetailActivity.class).setData(dateUri);
         startActivity(intent);

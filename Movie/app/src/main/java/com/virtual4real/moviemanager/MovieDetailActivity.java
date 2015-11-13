@@ -1,13 +1,8 @@
 package com.virtual4real.moviemanager;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 
 public class MovieDetailActivity extends AppCompatActivity {
 
@@ -29,6 +24,8 @@ public class MovieDetailActivity extends AppCompatActivity {
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.movie_detail_container, (Fragment) fragment)
                     .commit();
+
+
         }
 
 
