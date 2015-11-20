@@ -27,6 +27,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.RatingBar;
@@ -81,6 +82,9 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
     @Bind(R.id.cardReviews)
     public CardView cardReviews;
 
+    @Bind(R.id.fab_container)
+    public FrameLayout fabContainer;
+
     @Bind(R.id.set_fav)
     public FloatingActionButton fab;
 
@@ -132,23 +136,52 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
         ButterKnife.bind(this, rootView);
 
         Bundle arguments = getArguments();
-        if (arguments != null) {
+        if (arguments == null) {
+            SetControlsVisibility(View.INVISIBLE);
+        } else {
             mUri = arguments.getParcelable(MovieDetailFragment.DETAIL_URI);
             bTwoPane = arguments.getBoolean(MovieDetailFragment.HAS_TWO_PANE);
-
-            long nid = MovieProvider.getMovieSummaryId(mUri);
-            mUriTrailers = MovieProvider.getMovieTrailerUri(nid);
-            mUriReviews = MovieProvider.getMovieReviewUri(nid);
-            mUriExtraDetails = MovieProvider.getMovieDetailUri(nid);
         }
 
-        fab.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                setFavorite(fab);
+        if (null == mUri) {
+            SetControlsVisibility(View.INVISIBLE);
+        } else {
+            SetControlsVisibility(View.VISIBLE);
+
+            if (bTwoPane) {
+                AppBarLayout.LayoutParams params =
+                        (AppBarLayout.LayoutParams) collapsingToolbar.getLayoutParams();
+                params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL);
+                collapsingToolbar.setLayoutParams(params);
+                collapsingToolbar.requestLayout();
+
             }
-        });
+
+            if (null != mUri) {
+                long nid = MovieProvider.getMovieSummaryId(mUri);
+                mUriTrailers = MovieProvider.getMovieTrailerUri(nid);
+                mUriReviews = MovieProvider.getMovieReviewUri(nid);
+                mUriExtraDetails = MovieProvider.getMovieDetailUri(nid);
+            }
+
+            fab.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    setFavorite(fab);
+                }
+            });
+
+        }
 
         return rootView;
+    }
+
+    private void SetControlsVisibility(int visibility) {
+        viewCards.setVisibility(visibility);
+        fab.setVisibility(visibility);
+        appBar.setVisibility(visibility);
+        collapsingToolbar.setVisibility(visibility);
+        toolbar.setVisibility(visibility);
+        fabContainer.setVisibility(visibility);
     }
 
     @Override
@@ -157,7 +190,6 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
 
         MenuItem shareItem = menu.findItem(R.id.menu_item_share);
         mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(shareItem);
-
         mShareActionProvider.setShareIntent(mShareActionUtility.createShareIntent());
     }
 
@@ -165,9 +197,11 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        getLoaderManager().initLoader(DETAIL_LOADER, null, this);
-        getLoaderManager().initLoader(TRAILER_LOADER, null, this);
-        getLoaderManager().initLoader(REVIEWS_LOADER, null, this);
+        if (null != mUri) {
+            getLoaderManager().initLoader(DETAIL_LOADER, null, this);
+            getLoaderManager().initLoader(TRAILER_LOADER, null, this);
+            getLoaderManager().initLoader(REVIEWS_LOADER, null, this);
+        }
         super.onActivityCreated(savedInstanceState);
     }
 
@@ -175,14 +209,7 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         if (null == mUri) {
-            viewCards.setVisibility(View.INVISIBLE);
-            fab.setVisibility(View.INVISIBLE);
-            appBar.setVisibility(View.INVISIBLE);
             return null;
-        } else {
-            viewCards.setVisibility(View.VISIBLE);
-            fab.setVisibility(View.VISIBLE);
-            appBar.setVisibility(View.VISIBLE);
         }
 
         long nid = MovieProvider.getMovieSummaryId(mUri);
@@ -393,6 +420,7 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
         super.onResume();
         getLoaderManager().initLoader(DETAIL_LOADER, null, this);
         getLoaderManager().initLoader(TRAILER_LOADER, null, this);
+        getLoaderManager().initLoader(REVIEWS_LOADER, null, this);
     }
 
 

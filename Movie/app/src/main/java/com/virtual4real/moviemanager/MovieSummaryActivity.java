@@ -40,10 +40,11 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
             DisplayMetrics dMetrics = new DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(dMetrics);
 
-            int nWidth = (mTwoPane ? (dMetrics.widthPixels * (1 / 3)) : dMetrics.widthPixels);
+            int nWidth = (mTwoPane ? (dMetrics.widthPixels / 3) : dMetrics.widthPixels);
 
             Bundle args = new Bundle();
-            args.putInt(MovieSummaryFragment.TWO_PANE, nWidth);
+            args.putInt(MovieSummaryFragment.TOTAL_WIDTH, nWidth);
+            args.putBoolean(MovieSummaryFragment.TWO_PANE, mTwoPane);
 
             MovieSummaryFragment summaryFragment = new MovieSummaryFragment();
             summaryFragment.setArguments(args);
@@ -52,25 +53,6 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
                     .commit();
         }
 
-        /*
-        if (findViewById(R.id.weather_detail_container) != null) {
-            // The detail container view will be present only in the large-screen layouts
-            // (res/layout-sw600dp). If this view is present, then the activity should be
-            // in two-pane mode.
-            mTwoPane = true;
-            // In two-pane mode, show the detail view in this activity by
-            // adding or replacing the detail fragment using a
-            // fragment transaction.
-            if (savedInstanceState == null) {
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.weather_detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
-                        .commit();
-            }
-        } else {
-            mTwoPane = false;
-            getSupportActionBar().setElevation(0f);
-        }
-        * */
 
         MovieManagerSyncAdapter.initializeSyncAdapter(this);
     }
@@ -104,16 +86,24 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
 
     @Override
     public void onItemSelected(Uri dateUri) {
-        long nMovieId = MovieProvider.getMovieSummaryId(dateUri);
-        MovieManagerSyncAdapter.syncImmediately(getApplicationContext(), nMovieId);
+        long nMovieId = 0;
+
+        if (null != dateUri) {
+            nMovieId = MovieProvider.getMovieSummaryId(dateUri);
+            MovieManagerSyncAdapter.syncImmediately(getApplicationContext(), nMovieId);
+        }
+
+
 
         if (mTwoPane) {
+
             Bundle args = new Bundle();
             args.putParcelable(MovieDetailFragment.DETAIL_URI, dateUri);
             args.putBoolean(MovieDetailFragment.HAS_TWO_PANE, mTwoPane);
 
             MovieDetailFragment fragment = new MovieDetailFragment();
             fragment.setArguments(args);
+
 
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.movie_detail_container, fragment, DETAILFRAGMENT_TAG)

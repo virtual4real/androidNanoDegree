@@ -64,10 +64,12 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
     SummaryImageSize summ;
 
     public ToggleButton switchAB;
+    private boolean bTwoPane = false;
 
     private ContentObserver mObserver;
 
     private static final int MOVIE_SUMMARY_LOADER = 0;
+    public static final String TOTAL_WIDTH = "total_width";
     public static final String TWO_PANE = "two_pane";
 
     public MovieSummaryFragment() {
@@ -114,14 +116,13 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         switchAB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    Utils.setPreferredSort(getContext(), getContext().getString(R.string.sort_asc));
-                    MovieManagerSyncAdapter.syncImmediately(getContext(), Utils.getOrderAndSortFromPreferences(getContext()), 1);
-                    getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, frag);
-                } else {
-                    Utils.setPreferredSort(getContext(), getContext().getString(R.string.sort_desc));
-                    MovieManagerSyncAdapter.syncImmediately(getContext(), Utils.getOrderAndSortFromPreferences(getContext()), 1);
-                    getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, frag);
+                Utils.setPreferredSort(getContext(),
+                        getContext().getString(isChecked ? R.string.sort_asc : R.string.sort_desc));
+                MovieManagerSyncAdapter.syncImmediately(getContext(), Utils.getOrderAndSortFromPreferences(getContext()), 1);
+                getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, frag);
+
+                if (bTwoPane) {
+                    ((MovieSummaryActivity) getActivity()).onItemSelected(null);
                 }
             }
         });
@@ -172,6 +173,10 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
                 }
 
                 getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, frag);
+
+                if (bTwoPane) {
+                    ((MovieSummaryActivity) getActivity()).onItemSelected(null);
+                }
                 return true;
             }
         });
@@ -237,7 +242,8 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
         Bundle arguments = getArguments();
         if (null != arguments) {
-            mTotalWidth = arguments.getInt(MovieSummaryFragment.TWO_PANE);
+            mTotalWidth = arguments.getInt(MovieSummaryFragment.TOTAL_WIDTH);
+            bTwoPane = arguments.getBoolean(MovieSummaryFragment.TWO_PANE);
         }
 
         ButterKnife.bind(this, rootView);
