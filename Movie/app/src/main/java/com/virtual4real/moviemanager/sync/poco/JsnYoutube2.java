@@ -3,7 +3,8 @@ package com.virtual4real.moviemanager.sync.poco;
 /**
  * Created by ioanagosman on 13/11/15.
  */
-public class JsnYoutube {
+
+public class JsnYoutube2 {
     private String source;
 
     private String name;

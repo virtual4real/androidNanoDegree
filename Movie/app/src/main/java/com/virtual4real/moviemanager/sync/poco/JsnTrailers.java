@@ -4,15 +4,15 @@ package com.virtual4real.moviemanager.sync.poco;
  * Created by ioanagosman on 13/11/15.
  */
 public class JsnTrailers {
-    private JsnYoutube[] youtube;
+    private JsnYoutube2[] youtube;
 
     private String[] quicktime;
 
-    public JsnYoutube[] getYoutube() {
+    public JsnYoutube2[] getYoutube() {
         return youtube;
     }
 
-    public void setYoutube(JsnYoutube[] youtube) {
+    public void setYoutube(JsnYoutube2[] youtube) {
         this.youtube = youtube;
     }
 

@@ -21,7 +21,7 @@ import com.virtual4real.moviemanager.sync.poco.JsnResults;
 import com.virtual4real.moviemanager.sync.poco.JsnReviews;
 import com.virtual4real.moviemanager.sync.poco.JsnSettings;
 import com.virtual4real.moviemanager.sync.poco.JsnTrailers;
-import com.virtual4real.moviemanager.sync.poco.JsnYoutube;
+import com.virtual4real.moviemanager.sync.poco.JsnYoutube2;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -210,7 +210,7 @@ public class DataTransformer {
         ContentValues[] trailerValues = new ContentValues[trailers.getYoutube().length];
 
         for (int i = 0; i < trailers.getYoutube().length; i++) {
-            JsnYoutube yt = trailers.getYoutube()[i];
+            JsnYoutube2 yt = trailers.getYoutube()[i];
             trailerValues[i] = new ContentValues();
 
             trailerValues[i].put(MovieTrailerColumns.DATE_UPDATED, MovieProvider.normalizeDate(System.currentTimeMillis()));
