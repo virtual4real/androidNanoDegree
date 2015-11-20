@@ -2,6 +2,7 @@ package com.virtual4real.moviemanager;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -30,16 +31,21 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
     private int nWidth;
     private int nHeight;
     private int nTextHeight;
+    private MovieSummaryFragment fragment;
+    private Context ctx;
 
 
-    public MovieGridAdapter(Context context, Cursor cursor, MovieSummaryFragment.Callback activity,
+    public MovieGridAdapter(Context context, Cursor cursor, MovieSummaryFragment frag,
+                            MovieSummaryFragment.Callback activity,
                             int nSpace, int nWidth, int nHeight, int nTextHeight) {
         super(context, cursor, activity);
+        ctx = context;
         mBaseImagePath = Utils.getBaseImageUrl(context);
         this.nSpace = nSpace;
         this.nWidth = nWidth;
         this.nHeight = nHeight;
         this.nTextHeight = nTextHeight;
+        this.fragment = frag;
     }
 
 
@@ -56,6 +62,9 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
         public RatingBar rbRating;
         @Bind(R.id.tv_error)
         public TextView tvError;
+        @Bind(R.id.favorite_summary)
+        public ImageView imgFavorite;
+
 
         public ViewHolder(View view, int nWidth, int nHeight, int nTextHeight, int nSpace) {
             super(view);
@@ -82,8 +91,7 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View v = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.grid_item, viewGroup, false);
-        ViewHolder viewHolder = new ViewHolder(v, nWidth, nHeight, nTextHeight, nSpace);
-        return viewHolder;
+        return new ViewHolder(v, nWidth, nHeight, nTextHeight, nSpace);
     }
 
 
@@ -133,6 +141,61 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
 
         viewHolder.tvTitle.setOnClickListener(onClick);
         viewHolder.imgThumbnail.setOnClickListener(onClick);
+
+        viewHolder.imgFavorite.setTag(myListItem.getFavorite());
+        viewHolder.imgFavorite.setId(myListItem.getMovieId());
+        setFavoriteBasedOnTag(viewHolder.imgFavorite);
+
+        View.OnClickListener onClickFavorites = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int nMovieId = v.getId();
+                int nFavorites = (int) v.getTag();
+
+                setFavorite((ImageView) v, nFavorites, MovieProvider.buildMovieSummaryUri(nMovieId));
+
+                fragment.restartLoaderOnlyForFavorites();
+            }
+        };
+        viewHolder.imgFavorite.setOnClickListener(onClickFavorites);
+    }
+
+    public void setFavoriteBasedOnTag(ImageView btn) {
+        int nTag = (int) btn.getTag();
+
+        //btn.setMaxWidth((int)ctx.getResources().getDimension(R.dimen.favorite_summary_image));
+        //btn.setMaxHeight((int)ctx.getResources().getDimension(R.dimen.favorite_summary_image));
+        btn.setAdjustViewBounds(true);
+        btn.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+
+        if (1 == nTag) {
+            btn.setImageResource(R.drawable.unlike);
+        } else {
+            btn.setImageResource(R.drawable.like);
+        }
+
+    }
+
+    public void setFavorite(ImageView btn, int nFavorite, Uri uri) {
+
+        //btn.setMaxWidth((int)ctx.getResources().getDimension(R.dimen.favorite_summary_image));
+        //btn.setMaxHeight((int)ctx.getResources().getDimension(R.dimen.favorite_summary_image));
+        btn.setAdjustViewBounds(true);
+        btn.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+        if (0 == nFavorite) {
+            btn.setImageResource(R.drawable.unlike);
+            mContext.getContentResolver().update(uri, MovieProvider.getMovieSummaryFavoriteContentValues(1), null, null);
+            nFavorite = 1;
+        } else {
+            btn.setImageResource(R.drawable.like);
+            mContext.getContentResolver().update(uri, MovieProvider.getMovieSummaryFavoriteContentValues(0), null, null);
+            nFavorite = 0;
+        }
+
+        btn.setTag(nFavorite);
+
     }
 
 

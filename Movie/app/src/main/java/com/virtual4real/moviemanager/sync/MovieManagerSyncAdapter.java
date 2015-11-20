@@ -77,7 +77,7 @@ public class MovieManagerSyncAdapter extends AbstractThreadedSyncAdapter {
         } catch (Exception e) {
             Log.e(LOG_TAG, "Error ", e);
         }
-        return;
+
     }
 
 

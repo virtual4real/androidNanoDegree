@@ -9,11 +9,23 @@
     <dimen name="card_view_width_min">180dp</dimen>
     <dimen name="card_view_space">2dp</dimen>
     <dimen name="card_view_text_height">60dp</dimen>
-    <dimen name="card_view_rating_height">20dp</dimen>
+    <dimen name="card_view_rating_height">30dp</dimen>
 
+    <dimen name="trailer_video_min_width">90dp</dimen>
+    <dimen name="trailer_video_max_width">150dp</dimen>
+    <dimen name="trailer_video_max_height">70dp</dimen>
+    <dimen name="trailer_video_spaces">10dp</dimen>
+    <dimen name="trailer_video_max_height_item">150dp</dimen>
+
+    <dimen name="reviews_spaces">5dp</dimen>
+    <dimen name="favorites_summary_image">50dp</dimen>
 
     <dimen name="detail_backdrop_height">256dp</dimen>
-    <dimen name="card_margin">4dp</dimen>
+    <dimen name="card_margin">8dp</dimen>
     <dimen name="list_item_avatar_size">40dp</dimen>
+    <dimen name="detail_card_margin">8dp</dimen>
+
+    <dimen name="favorite_summary_image">30dp</dimen>
+    <dimen name="favorite_summary_space">20dp</dimen>
 
 </resources>

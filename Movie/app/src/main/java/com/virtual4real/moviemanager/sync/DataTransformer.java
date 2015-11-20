@@ -1,15 +1,30 @@
 package com.virtual4real.moviemanager.sync;
 
 import android.content.ContentValues;
+import android.content.Context;
 
+import com.google.common.base.Joiner;
+import com.virtual4real.moviemanager.R;
 import com.virtual4real.moviemanager.data.MovieProvider;
+import com.virtual4real.moviemanager.database.MovieDetailColumns;
 import com.virtual4real.moviemanager.database.MovieOrderColumns;
+import com.virtual4real.moviemanager.database.MovieReviewColumns;
 import com.virtual4real.moviemanager.database.MovieSummaryColumns;
+import com.virtual4real.moviemanager.database.MovieTrailerColumns;
 import com.virtual4real.moviemanager.database.SyncOperationColumns;
 import com.virtual4real.moviemanager.database.UrlSettingsColumns;
+import com.virtual4real.moviemanager.sync.poco.JsnGenres;
 import com.virtual4real.moviemanager.sync.poco.JsnImages;
+import com.virtual4real.moviemanager.sync.poco.JsnMovieDetail;
 import com.virtual4real.moviemanager.sync.poco.JsnMovieSummary;
+import com.virtual4real.moviemanager.sync.poco.JsnResults;
+import com.virtual4real.moviemanager.sync.poco.JsnReviews;
 import com.virtual4real.moviemanager.sync.poco.JsnSettings;
+import com.virtual4real.moviemanager.sync.poco.JsnTrailers;
+import com.virtual4real.moviemanager.sync.poco.JsnYoutube;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by ioanagosman on 16/10/15.
@@ -23,37 +38,21 @@ import com.virtual4real.moviemanager.sync.poco.JsnSettings;
 public class DataTransformer {
 
 
-    public static ContentValues[] getMovieSummaryContentValues(JsnMovieSummary[] movies) {
+    public static ContentValues[] getMovieSummaryContentValues(Context ctx, JsnMovieSummary[] movies) {
         ContentValues[] values = new ContentValues[movies.length];
 
         for (int i = 0; i < movies.length; i++) {
-            values[i] = getMovieSummaryContentValue(movies[i], i);
+            values[i] = getMovieSummaryContentValue(movies[i], i, ctx);
 
         }
 
         return values;
     }
 
-//    public static ContentValues getMovieSummaryInfoContentValues(String totalResults,
-//                                                                 String totalPages, String currentPage,
-//                                                                 String sortType, long nOperationId) {
-//        ContentValues values = new ContentValues();
-//
-//        values.put(MovieProvider.MovieOrderHelper.PAGINATION_TOTAL_RESULTS, totalResults);
-//        values.put(MovieProvider.MovieOrderHelper.PAGINATION_TOTAL_PAGES, totalPages);
-//        values.put(MovieProvider.MovieOrderHelper.PAGINATION_CURRENT_PAGE, currentPage);
-//        values.put(MovieProvider.MovieOrderHelper.SORT_TYPE, MovieProvider.MovieOrderHelper.GetSortTypeInt(sortType));
-//        values.put(MovieProvider.MovieOrderHelper.OPERATION_ID, nOperationId);
-//
-//        return values;
-//    }
 
     public static ContentValues getMovieOrderContentValues(int currentPage, int nSortType, long nOperationId,
                                                            long nMovieSummaryId, int nPosition) {
-        if (3 == nSortType) {
-            String str = "bla bla";
-            str = null;
-        }
+
 
         ContentValues values = new ContentValues();
 
@@ -68,12 +67,23 @@ public class DataTransformer {
         return values;
     }
 
-    public static ContentValues getMovieSummaryContentValue(JsnMovieSummary movie, int i) {
+    public static ContentValues getMovieSummaryContentValue(JsnMovieSummary movie, int i, Context ctx) {
         ContentValues value = new ContentValues();
 
+        String str2 = "";
         String str = movie.getRelease_date();
         if (null != str && 0 != str.length() && 4 < str.length()) {
-            str = str.substring(0, 4);
+            str2 = str.substring(0, 4);
+        }
+
+        long milliseconds = 0;
+
+        try {
+            SimpleDateFormat f = new SimpleDateFormat(ctx.getResources().getString(R.string.date_time_format)); // "yyyy-MM-dd");
+            Date d = f.parse(str);
+            milliseconds = d.getTime();
+        } catch (Exception exex) {
+
         }
 
         value.put(MovieSummaryColumns.MOVIE_ID, movie.getId());
@@ -81,14 +91,15 @@ public class DataTransformer {
         value.put(MovieSummaryColumns.TITLE, movie.getTitle());
         value.put(MovieSummaryColumns.POPULARITY, movie.getPopularity());
         value.put(MovieSummaryColumns.POSTER_PATH, movie.getPoster_path());
-        value.put(MovieSummaryColumns.DATE_RELEASE, movie.getRelease_date());
+        value.put(MovieSummaryColumns.DATE_RELEASE, milliseconds); // movie.getRelease_date());
         value.put(MovieSummaryColumns.VOTE_AVERAGE, movie.getVote_average());
         value.put(MovieSummaryColumns.VOTE_COUNT, movie.getVote_count());
         value.put(MovieSummaryColumns.BACKDROP_PATH, movie.getBackdrop_path());
         value.put(MovieSummaryColumns.OVERVIEW, movie.getOverview());
         //value.put(MovieProvider.MovieOrderHelper.MOVIE_SUMMARY_POSITION, i);
         value.put(MovieSummaryColumns.DATE_UPDATED, MovieProvider.normalizeDate(System.currentTimeMillis()));
-        value.put(MovieSummaryColumns.YEAR_OF_RELEASE, str);
+        value.put(MovieSummaryColumns.YEAR_OF_RELEASE, str2);
+        value.put(MovieSummaryColumns.IS_FAVORITE, 0);
 
         return value;
     }
@@ -165,43 +176,78 @@ public class DataTransformer {
         return settingsValues;
     }
 
-//    public static MovieSummary getMovieSummary(DbService service, ContentValues values) {
-//        long movieId = values.getAsLong(MovieSummary$Table.MOVIEID);
-//        MovieSummary movieSummary = service.GetMovieSummaryByMovieId(movieId);
-//
-//        if (null == movieSummary) {
-//            movieSummary = new MovieSummary();
-//            movieSummary.setDateUpdated(System.currentTimeMillis());
-//        }
-//
-//        movieSummary.setMovieId(values.getAsInteger(MovieSummary$Table.MOVIEID));
-//        movieSummary.setOriginalTitle(values.getAsString(MovieSummary$Table.ORIGINALTITLE));
-//        movieSummary.setTitle(values.getAsString(MovieSummary$Table.TITLE));
-//        movieSummary.setPosterPath(values.getAsString(MovieSummary$Table.POSTERPATH));
-//        movieSummary.setPopularity(values.getAsDouble(MovieSummary$Table.POPULARITY));
-//        movieSummary.setVoteAverage(values.getAsDouble(MovieSummary$Table.VOTEAVERAGE));
-//        movieSummary.setVoteCount(values.getAsInteger(MovieSummary$Table.VOTECOUNT));
-//        movieSummary.setBackdropPath(values.getAsString(MovieSummary$Table.BACKDROPPATH));
-//        movieSummary.setOverview(values.getAsString(MovieSummary$Table.OVERVIEW));
-//
-//        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
-//        try {
-//            String sDate = values.getAsString(MovieSummary$Table.RELEASEDATE);
-//            Date dt = null;
-//            if (null != sDate) {
-//                dt = f.parse(sDate);
-//
-//                Calendar cal = Calendar.getInstance();
-//                cal.setTime(dt);
-//
-//                movieSummary.setYearOfRelease(cal.get(Calendar.YEAR));
-//            }
-//            movieSummary.setReleaseDate(null == dt ? MovieContract.normalizeDate(System.currentTimeMillis()) :
-//                    MovieContract.normalizeDate(dt.getTime()));
-//        } catch (ParseException exex) {
-//            movieSummary.setReleaseDate(MovieContract.normalizeDate(System.currentTimeMillis()));
-//        }
-//
-//        return movieSummary;
-//    }
+    public static ContentValues getMovieDetailsContentValues(JsnMovieDetail movieDetailResult) {
+        ContentValues detailValues = new ContentValues();
+
+        detailValues.put(MovieDetailColumns.DATE_RELEASE, movieDetailResult.getRelease_date());
+        detailValues.put(MovieDetailColumns.DATE_UPDATED, MovieProvider.normalizeDate(System.currentTimeMillis()));
+        detailValues.put(MovieDetailColumns.GENRES, getGenres(movieDetailResult.getGenres()));
+        detailValues.put(MovieDetailColumns.HOMEPAGE, movieDetailResult.getHomepage());
+        detailValues.put(MovieDetailColumns.MOVIE_ID, movieDetailResult.getId());
+        detailValues.put(MovieDetailColumns.RUNTIME, movieDetailResult.getRuntime());
+        detailValues.put(MovieDetailColumns.STATUS, movieDetailResult.getStatus());
+        detailValues.put(MovieDetailColumns.TAG_LINE, movieDetailResult.getTagline());
+
+        return detailValues;
+    }
+
+    private static String getGenres(JsnGenres[] genres) {
+        String[] vGenres = new String[genres.length];
+
+        for (int i = 0; i < genres.length; i++) {
+            vGenres[i] = genres[i].getName();
+        }
+
+        return Joiner.on(",").skipNulls().join(vGenres);
+    }
+
+    public static ContentValues[] getMovieTrailers(JsnMovieDetail movieDetailResult) {
+        JsnTrailers trailers = movieDetailResult.getTrailers();
+        if (null == trailers || 0 == trailers.getYoutube().length) {
+            return null;
+        }
+
+        ContentValues[] trailerValues = new ContentValues[trailers.getYoutube().length];
+
+        for (int i = 0; i < trailers.getYoutube().length; i++) {
+            JsnYoutube yt = trailers.getYoutube()[i];
+            trailerValues[i] = new ContentValues();
+
+            trailerValues[i].put(MovieTrailerColumns.DATE_UPDATED, MovieProvider.normalizeDate(System.currentTimeMillis()));
+            trailerValues[i].put(MovieTrailerColumns.MOVIE_ID, movieDetailResult.getId());
+            trailerValues[i].put(MovieTrailerColumns.NAME, yt.getName());
+            trailerValues[i].put(MovieTrailerColumns.SIZE, yt.getSize());
+            trailerValues[i].put(MovieTrailerColumns.SOURCE, yt.getSource());
+            trailerValues[i].put(MovieTrailerColumns.TYPE, yt.getType());
+        }
+
+        return trailerValues;
+    }
+
+    public static ContentValues[] getMovieReviews(JsnMovieDetail movieDetailResult) {
+        JsnReviews reviews = movieDetailResult.getReviews();
+        if (null == reviews || 0 == Integer.parseInt(reviews.getTotal_results())) {
+            return null;
+        }
+
+        JsnResults[] results = reviews.getResults();
+
+        ContentValues[] reviewValues = new ContentValues[results.length];
+
+        for (int i = 0; i < results.length; i++) {
+            JsnResults res = results[i];
+            reviewValues[i] = new ContentValues();
+
+            reviewValues[i].put(MovieReviewColumns.DATE_UPDATED, MovieProvider.normalizeDate(System.currentTimeMillis()));
+            reviewValues[i].put(MovieReviewColumns.MOVIE_ID, movieDetailResult.getId());
+            reviewValues[i].put(MovieReviewColumns.AUTHOR, res.getAuthor());
+            reviewValues[i].put(MovieReviewColumns.CONTENT, res.getContent());
+            reviewValues[i].put(MovieReviewColumns.REVIEW_ID, res.getId());
+            reviewValues[i].put(MovieReviewColumns.URL, res.getUrl());
+        }
+
+        return reviewValues;
+    }
+
+
 }

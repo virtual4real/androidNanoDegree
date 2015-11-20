@@ -33,5 +33,7 @@ public interface IApiMethods {
 
     @GET(RestApiContract.MOVIE_DETAIL)
     void getMovieDetail(@Path(RestApiContract.MOVIE_DETAIL_ID) long movieId,
-                        @Query(RestApiContract.API_KEY) String key, Callback<JsnMovieDetail> cb);
+                        @Query(RestApiContract.API_KEY) String key,
+                        @Query(RestApiContract.APPEND_TO_RESPONSE) String appendTo,
+                        Callback<JsnMovieDetail> cb);
 }

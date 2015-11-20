@@ -10,11 +10,7 @@ import net.simonvt.schematic.annotation.DataType;
 import net.simonvt.schematic.annotation.NotNull;
 import net.simonvt.schematic.annotation.PrimaryKey;
 
-/**
- * SyncOperation contains the common parameters used to query the
- * rest api for data (min date, max date, min votes, adult and video).
- * Parameters regarding the sort type and the page are stored in MovieOrder table.
- */
+
 public interface SyncOperationColumns {
     @DataType(DataType.Type.INTEGER)
     @PrimaryKey

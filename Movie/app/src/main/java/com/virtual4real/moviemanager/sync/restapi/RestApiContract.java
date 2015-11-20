@@ -15,6 +15,7 @@ public class RestApiContract {
 
 
     public static final String API_KEY = "api_key";
+    public static final String APPEND_TO_RESPONSE = "append_to_response";
     public static final String SORT_KEY = "sort_by";
     public static final String PAGE_KEY = "page";
     public static final String RELEASE_DATE_START_KEY = "release_date.gte";
@@ -29,6 +30,11 @@ public class RestApiContract {
     public static final String SORT_KEY_VOTE_DESC = "vote_average.desc";
     public static final String SORT_KEY_RELEASE_ASC = "release_date.asc";
     public static final String SORT_KEY_RELEASE_DESC = "release_date.desc";
+
+    public static final String SORT_KEY_FAVORITE_DESC = "favorite.desc";
+    public static final String SORT_KEY_FAVORITE_ASC = "favorite.asc";
+
+    public static final String APPEND_TO_RESPONSE_DETAIL = "reviews,trailers";
 
     public static final String IMAGE_BASE_URL_DEFAULT = "http://image.tmdb.org/t/p/w300";
 

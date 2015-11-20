@@ -24,6 +24,8 @@ import android.widget.CompoundButton;
 import android.widget.ToggleButton;
 
 import com.virtual4real.moviemanager.data.MovieProvider;
+import com.virtual4real.moviemanager.database.MovieOrderColumns;
+import com.virtual4real.moviemanager.database.MovieSummaryColumns;
 import com.virtual4real.moviemanager.database.UrlSettingsColumns;
 import com.virtual4real.moviemanager.sync.MovieManagerSyncAdapter;
 import com.virtual4real.moviemanager.sync.SearchParameters;
@@ -39,6 +41,8 @@ import butterknife.ButterKnife;
  * A placeholder fragment containing a simple view.
  */
 public class MovieSummaryFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+
+    private int mTotalWidth = 0;
 
     class SummaryImageSize {
         public int Width;
@@ -64,9 +68,13 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
     private ContentObserver mObserver;
 
     private static final int MOVIE_SUMMARY_LOADER = 0;
+    public static final String TWO_PANE = "two_pane";
 
     public MovieSummaryFragment() {
+
+        mTotalWidth = 0;
     }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -80,7 +88,7 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
                 //Log.d("ONCHANGE", "ONCHANGE_______________");
             }
         };
-        //REPLACED: MovieContract.MovieSummaryEntry.CONTENT_URI
+
         getActivity().getContentResolver()
                 .registerContentObserver(MovieProvider.getMovieSummaryUri(), true, mObserver);
     }
@@ -131,29 +139,38 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
                     orderItem.setIcon(R.drawable.release);
                 } else {
                     orderItem.setIcon(R.drawable.favourite);
+                    switchAB.setVisibility(View.INVISIBLE);
                 }
             }
         }
 
         SubMenu subMenu = orderItem.getSubMenu();
         if (null != subMenu) {
-            setSubMenuListener(0, R.drawable.popularity, R.string.order_popular, orderItem, subMenu);
-            setSubMenuListener(1, R.drawable.voting, R.string.order_rated, orderItem, subMenu);
-            setSubMenuListener(2, R.drawable.favourite, R.string.order_favorite, orderItem, subMenu);
-            setSubMenuListener(3, R.drawable.release, R.string.order_release, orderItem, subMenu);
+            setSubMenuListener(0, R.drawable.popularity, R.string.order_popular, orderItem, subMenu, switchAB);
+            setSubMenuListener(1, R.drawable.voting, R.string.order_rated, orderItem, subMenu, switchAB);
+            setSubMenuListener(2, R.drawable.favourite, R.string.order_favorite, orderItem, subMenu, switchAB);
+            setSubMenuListener(3, R.drawable.release, R.string.order_release, orderItem, subMenu, switchAB);
         }
     }
 
     private void setSubMenuListener(int nIndex, final int nIconResourceId, final int nOrderResourceId,
-                                    final MenuItem itemToChange, SubMenu subMenu) {
+                                    final MenuItem itemToChange, SubMenu subMenu, final ToggleButton switchAB) {
         MenuItem item = subMenu.getItem(nIndex);
         final LoaderManager.LoaderCallbacks<Cursor> frag = this;
         item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 itemToChange.setIcon(nIconResourceId);
+
+                if (null != switchAB) {
+                    switchAB.setVisibility((nIconResourceId == R.drawable.favourite ? View.INVISIBLE : View.VISIBLE));
+                }
+
                 Utils.setPreferredOrder(getContext(), getContext().getString(nOrderResourceId));
-                MovieManagerSyncAdapter.syncImmediately(getContext(), Utils.getOrderAndSortFromPreferences(getContext()), 1);
+                if (nIconResourceId != R.drawable.favourite) {
+                    MovieManagerSyncAdapter.syncImmediately(getContext(), Utils.getOrderAndSortFromPreferences(getContext()), 1);
+                }
+
                 getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, frag);
                 return true;
             }
@@ -192,14 +209,18 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
             MovieManagerSyncAdapter.syncImmediately(getContext(), sortOrder, 1);
         }
 
-
-        //TODO: set order by position
-        //REPLACED: MovieContract.MovieSummaryEntry.CONTENT_URI
         int nSortType = MovieProvider.MovieOrderHelper.GetSortTypeInt(sortOrder);
-        return new CursorLoader(getActivity(), MovieProvider.buildMovieSummaryUri(1, nSortType),
-                MovieProvider.getMovieSummaryProjection(),
-                null, null, null);
 
+
+        return nSortType == MovieProvider.FAVOURITE_SEARCH ?
+                new CursorLoader(getActivity(), MovieProvider.buildMovieSummaryUriForFavorites(1),
+                        MovieProvider.getMovieSummaryProjection(),
+                        null, null, MovieSummaryColumns.TITLE) :
+
+                new CursorLoader(getActivity(), MovieProvider.buildMovieSummaryUri(1, nSortType),
+                        MovieProvider.getMovieSummaryProjection(),
+                        null, null,
+                        MovieOrderColumns.PAGE + ", " + MovieOrderColumns.POSITION);
 
     }
 
@@ -213,6 +234,11 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_movie_summary, container, false);
+
+        Bundle arguments = getArguments();
+        if (null != arguments) {
+            mTotalWidth = arguments.getInt(MovieSummaryFragment.TWO_PANE);
+        }
 
         ButterKnife.bind(this, rootView);
         // Calling the RecyclerView
@@ -235,12 +261,6 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
         SummaryImageSize summ = new SummaryImageSize();
 
-        DisplayMetrics dMetrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(dMetrics);
-        //float density = dMetrics.density;
-        //int w = Math.round(dMetrics.widthPixels / density);
-        int w = dMetrics.widthPixels;
-
         int nMinWidth = (int) getResources().getDimension(R.dimen.card_view_width_min);
         float nRatio = Float.parseFloat(getResources().getString(R.string.card_view_image_ratio));
         int nSpace = (int) getResources().getDimension(R.dimen.card_view_space);
@@ -249,11 +269,11 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
         int nColumns = 1;
 
-        while (nMinWidth * nColumns < w) {
+        while (nMinWidth * nColumns < mTotalWidth) {
             nColumns++;
         }
 
-        float nWidth = (w - (nColumns + 1) * nSpace) / nColumns;
+        float nWidth = (mTotalWidth - (nColumns + 1) * nSpace) / nColumns;
 
         summ.NoColumns = nColumns;
 
@@ -270,7 +290,6 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         try {
             String strUrl = null;
 
-            //REPLACED: MovieContract.SettingEntry.CONTENT_URI
             Cursor cursor = getContext().getContentResolver()
                     .query(MovieProvider.getSeetingsUri(),
                             new String[]{UrlSettingsColumns.BASE_URL, UrlSettingsColumns.LOGO_SIZE_URL,
@@ -360,17 +379,23 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+        //if(!(getActivity() instanceof MovieSummaryActivity)){ return; }
+
         //TODO: checkout the position in the model application
 
-        mAdapter = new MovieGridAdapter(getContext(), data, (Callback) getActivity(),
+        mAdapter = new MovieGridAdapter(getContext(), data, this, (Callback) getActivity(),
                 summ.NoSpaces, summ.Width, summ.Height, summ.TextHeight);
         mRecyclerView.setAdapter(mAdapter);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+
+        //if(!(getActivity() instanceof MovieSummaryActivity)){ return; }
+
         //mForecastAdapter.swapCursor(null);
-        mAdapter = new MovieGridAdapter(getContext(), null, (Callback) getActivity(),
+        mAdapter = new MovieGridAdapter(getContext(), null, this, (Callback) getActivity(),
                 summ.NoSpaces, summ.Width, summ.Height, summ.TextHeight);
 
         if (null != mRecyclerView) {
@@ -380,12 +405,22 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
 
     public interface Callback {
-        public void onItemSelected(Uri dateUri);
+        void onItemSelected(Uri dateUri);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         ButterKnife.unbind(this);
+    }
+
+    public void restartLoaderOnlyForFavorites() {
+        String sortOrder = Utils.getOrderAndSortFromPreferences(getContext());
+        int nSortType = MovieProvider.MovieOrderHelper.GetSortTypeInt(sortOrder);
+
+        if (MovieProvider.FAVOURITE_SEARCH == nSortType) {
+            getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, this);
+        }
+
     }
 }

@@ -8,7 +8,9 @@ import android.text.format.Time;
 
 import com.virtual4real.moviemanager.database.MovieDatabase;
 import com.virtual4real.moviemanager.database.MovieOrderColumns;
+import com.virtual4real.moviemanager.database.MovieReviewColumns;
 import com.virtual4real.moviemanager.database.MovieSummaryColumns;
+import com.virtual4real.moviemanager.database.MovieTrailerColumns;
 import com.virtual4real.moviemanager.database.SyncOperationColumns;
 import com.virtual4real.moviemanager.database.UrlSettingsColumns;
 import com.virtual4real.moviemanager.sync.restapi.RestApiContract;
@@ -36,6 +38,8 @@ public final class MovieProvider {
     public MovieProvider() {
     }
 
+    public static final int FAVOURITE_SEARCH = 7;
+
     public static final String AUTHORITY = "com.virtual4real.moviemanager.app";
 
     static final Uri BASE_CONTENT_URI = Uri.parse("content://" + AUTHORITY);
@@ -46,9 +50,34 @@ public final class MovieProvider {
                 MovieSummaryColumns.DATE_UPDATED, MovieSummaryColumns.MOVIE_ID, MovieSummaryColumns.ORIGINAL_TITLE,
                 MovieSummaryColumns.OVERVIEW, MovieSummaryColumns.POPULARITY, MovieSummaryColumns.POSTER_PATH,
                 MovieSummaryColumns.TITLE, MovieSummaryColumns.VOTE_AVERAGE, MovieSummaryColumns.VOTE_COUNT,
-                MovieSummaryColumns.YEAR_OF_RELEASE};
+                MovieSummaryColumns.IS_FAVORITE, MovieSummaryColumns.YEAR_OF_RELEASE};
 
         return getColsWithTable(cols, MovieDatabase.Tables.MOVIE_SUMMARY);
+    }
+
+    public static String[] getMovieTrailerProjection() {
+        String[] cols = new String[]{
+                MovieTrailerColumns.ID + " as _id ", MovieTrailerColumns.NAME, MovieTrailerColumns.SIZE,
+                MovieTrailerColumns.SOURCE, MovieTrailerColumns.TYPE};
+
+        return getColsWithTable(cols, MovieDatabase.Tables.MOVIE_TRAILER);
+
+    }
+
+    public static String[] getMovieReviewProjection() {
+        String[] cols = new String[]{
+                MovieReviewColumns.ID + " as _id ", MovieReviewColumns.AUTHOR, MovieReviewColumns.URL,
+                MovieReviewColumns.CONTENT, MovieReviewColumns.REVIEW_ID};
+
+        return getColsWithTable(cols, MovieDatabase.Tables.MOVIE_REVIEW);
+
+    }
+
+    public static ContentValues getMovieSummaryFavoriteContentValues(int nValue) {
+        ContentValues cv = new ContentValues();
+        cv.put(MovieSummaryColumns.IS_FAVORITE, nValue);
+
+        return cv;
     }
 
     private static String[] getColsWithTable(String[] cols, String sTable) {
@@ -61,19 +90,23 @@ public final class MovieProvider {
         return result;
     }
 
+
     interface Path {
         String SETTINGS = "settings";
         String MOVIE_SUMMARY = "movie_summary";
         String ORDER_MOVIES = "movies_order";
         String SYNC_OPERATIONS = "operations";
         String MOVIE_DETAIL = "moviedetail";
-
+        String MOVIE_TRAILER = "movietrailer";
+        String MOVIE_REVIEW = "moviereview";
         String BY_ORDER_PAGE = "byorderandpage";
+        String BY_FAVORITES = "byfavorites";
     }
 
     public static Uri getMovieSummaryUri() {
         return BASE_CONTENT_URI.buildUpon().appendPath(Path.MOVIE_SUMMARY).build();
     }
+
 
     public static Uri getMovieOrderUri() {
         return BASE_CONTENT_URI.buildUpon().appendPath(Path.ORDER_MOVIES).build();
@@ -81,6 +114,18 @@ public final class MovieProvider {
 
     public static Uri getSeetingsUri() {
         return BASE_CONTENT_URI.buildUpon().appendPath(Path.SETTINGS).build();
+    }
+
+    public static Uri getMovieDetailUri(long movieId) {
+        return ContentUris.withAppendedId(BASE_CONTENT_URI.buildUpon().appendPath(Path.MOVIE_DETAIL).build(), movieId);
+    }
+
+    public static Uri getMovieTrailerUri(long movieId) {
+        return ContentUris.withAppendedId(BASE_CONTENT_URI.buildUpon().appendPath(Path.MOVIE_TRAILER).build(), movieId);
+    }
+
+    public static Uri getMovieReviewUri(long movieId) {
+        return ContentUris.withAppendedId(BASE_CONTENT_URI.buildUpon().appendPath(Path.MOVIE_REVIEW).build(), movieId);
     }
 
     public static Uri getOperationUri() {
@@ -91,10 +136,18 @@ public final class MovieProvider {
         return ContentUris.withAppendedId(getMovieSummaryUri(), id);
     }
 
+
     public static Uri buildMovieSummaryUri(int nPage, int nSortType) {
         return ContentUris.withAppendedId(ContentUris.withAppendedId(
                 BASE_CONTENT_URI.buildUpon().appendPath(Path.MOVIE_SUMMARY).appendPath(Path.BY_ORDER_PAGE).build(),
                 nPage), nSortType);
+    }
+
+    public static Uri buildMovieSummaryUriForFavorites(int nFavorites) {
+        return ContentUris.withAppendedId(
+                BASE_CONTENT_URI.buildUpon().appendPath(Path.MOVIE_SUMMARY).appendPath(Path.BY_FAVORITES).build(),
+                nFavorites);
+
     }
 
 
@@ -195,6 +248,16 @@ public final class MovieProvider {
                         MovieDatabase.Tables.MOVIE_ORDER + "." + MovieOrderColumns.MOVIE_SUMMARY_ID)
         public static Uri fromList(String sortType, long page) {
             return buildUri(Path.MOVIE_SUMMARY, Path.BY_ORDER_PAGE, sortType, String.valueOf(page));
+        }
+
+        @InexactContentUri(
+                name = "MOVIE_SUMMARY_FAVORITES",
+                path = Path.MOVIE_SUMMARY + "/" + Path.BY_FAVORITES + "/#",
+                type = "vnd.android.cursor.dir/byfavorites",
+                whereColumn = MovieDatabase.Tables.MOVIE_SUMMARY + "." + MovieSummaryColumns.IS_FAVORITE,
+                pathSegment = 2)
+        public static Uri fromList(int nFavorite) {
+            return buildUri(Path.MOVIE_SUMMARY, Path.BY_FAVORITES, String.valueOf(nFavorite));
         }
 
 //        @NotifyInsert(paths = Path.MOVIE_SUMMARY) public static Uri[] onInsert(ContentValues values) {
@@ -298,6 +361,68 @@ public final class MovieProvider {
         }
     }
 
+
+    @TableEndpoint(table = MovieDatabase.Tables.MOVIE_DETAIL)
+    public static class MovieDetail {
+
+        @ContentUri(
+                path = Path.MOVIE_DETAIL,
+                type = "vnd.android.cursor.dir/moviedetail")
+        public static final Uri CONTENT_URI = buildUri(Path.MOVIE_DETAIL);
+
+        @InexactContentUri(
+                name = "MOVIE_DETAIL_ID",
+                path = Path.MOVIE_DETAIL + "/#",
+                type = "vnd.android.cursor.item/moviedetail",
+                whereColumn = MovieSummaryColumns.MOVIE_ID,
+                pathSegment = 1)
+        public static Uri withId(long id) {
+            return buildUri(Path.MOVIE_DETAIL, String.valueOf(id));
+        }
+
+    }
+
+    @TableEndpoint(table = MovieDatabase.Tables.MOVIE_TRAILER)
+    public static class MovieTrailer {
+
+        @ContentUri(
+                path = Path.MOVIE_TRAILER,
+                type = "vnd.android.cursor.dir/movietrailer")
+        public static final Uri CONTENT_URI = buildUri(Path.MOVIE_TRAILER);
+
+        @InexactContentUri(
+                name = "MOVIE_TRAILER_ID",
+                path = Path.MOVIE_TRAILER + "/#",
+                type = "vnd.android.cursor.item/movietrailer",
+                whereColumn = MovieSummaryColumns.MOVIE_ID,
+                pathSegment = 1)
+        public static Uri withId(long id) {
+            return buildUri(Path.MOVIE_TRAILER, String.valueOf(id));
+        }
+
+    }
+
+    @TableEndpoint(table = MovieDatabase.Tables.MOVIE_REVIEW)
+    public static class MovieReview {
+
+        @ContentUri(
+                path = Path.MOVIE_REVIEW,
+                type = "vnd.android.cursor.dir/moviereview")
+        public static final Uri CONTENT_URI = buildUri(Path.MOVIE_REVIEW);
+
+        @InexactContentUri(
+                name = "MOVIE_REVIEW_ID",
+                path = Path.MOVIE_REVIEW + "/#",
+                type = "vnd.android.cursor.item/moviereview",
+                whereColumn = MovieSummaryColumns.MOVIE_ID,
+                pathSegment = 1)
+        public static Uri withId(long id) {
+            return buildUri(Path.MOVIE_REVIEW, String.valueOf(id));
+        }
+
+    }
+
+
     public static final class MovieOrderHelper {
         public static final String PAGINATION_TOTAL_RESULTS = "TOTAL_RESULTS";
         public static final String PAGINATION_TOTAL_PAGES = "TOTAL_PAGES";
@@ -389,296 +514,14 @@ public final class MovieProvider {
                 return 6;
             }
 
+            if (sortType.equals(RestApiContract.SORT_KEY_FAVORITE_DESC) ||
+                    sortType.equals(RestApiContract.SORT_KEY_FAVORITE_ASC)) {
+                return FAVOURITE_SEARCH;
+            }
+
             return 0;
         }
 
     }
 }
 
-//public class MovieProvider extends ContentProvider {
-//
-//    // The URI Matcher used by this content provider.
-//    private static final UriMatcher sUriMatcher = buildUriMatcher();
-//    //private WeatherDbHelper mOpenHelper;
-//
-//    static final int SETTINGS = 100;
-//    static final int MOVIE_SUMMARY = 101;
-//    static final int MOVIE_DETAIL_ID = 102;
-//    static final int OPERATIONS = 103;
-//
-//
-//    static UriMatcher buildUriMatcher() {
-//        final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
-//        final String authority = MovieContract.CONTENT_AUTHORITY;
-//
-//        matcher.addURI(authority, MovieContract.PATH_SETTINGS, SETTINGS);
-//        matcher.addURI(authority, MovieContract.PATH_OPERATIONS, OPERATIONS);
-//        matcher.addURI(authority, MovieContract.PATH_MOVIES, MOVIE_SUMMARY);
-//        matcher.addURI(authority, MovieContract.PATH_MOVIES + "/*", MOVIE_DETAIL_ID);
-//
-//        return matcher;
-//    }
-//
-//
-//    @Override
-//    public boolean onCreate() {
-//        return true;
-//    }
-//
-//    @Override
-//    public String getType(Uri uri) {
-//        final int match = sUriMatcher.match(uri);
-//
-//        switch (match) {
-//            case SETTINGS:
-//                return MovieContract.SettingEntry.CONTENT_ITEM_TYPE;
-//            case MOVIE_SUMMARY:
-//                return MovieContract.MovieSummaryEntry.CONTENT_TYPE;
-//            case MOVIE_DETAIL_ID:
-//                return MovieContract.MovieSummaryEntry.CONTENT_ITEM_TYPE;
-//
-//            default:
-//                throw new UnsupportedOperationException("Unknown uri: " + uri);
-//        }
-//    }
-//
-//    @Override
-//    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
-//                        String sortOrder) {
-//        Cursor retCursor = null;
-//        final int match = sUriMatcher.match(uri);
-//
-//        switch (match) {
-//            case SETTINGS: {
-//                DbService service = new DbService();
-//                retCursor = service.GetUrlSetting();
-//                break;
-//            }
-//            case OPERATIONS: {
-//                DbService service = new DbService();
-//
-//                //TODO: put these strings in resources
-//                String sMaxDate = getParameter(selectionArgs, 0, getContext().getString(R.string.default_max_date));
-//                String sMinDate = getParameter(selectionArgs, 1, getContext().getString(R.string.default_min_date));
-//                int nVotes = Integer.parseInt(getParameter(selectionArgs, 2, getContext().getString(R.string.default_min_votes)));
-//                boolean bAdult = Boolean.parseBoolean(getParameter(selectionArgs, 3, getContext().getString(R.string.default_adult)));
-//                boolean bVideo = Boolean.parseBoolean(getParameter(selectionArgs, 4, getContext().getString(R.string.default_video)));
-//
-//                retCursor = service.GetOperations(sMinDate, sMaxDate, nVotes, bAdult, bVideo);
-//                break;
-//            }
-//            case MOVIE_SUMMARY: {
-//                DbService service = new DbService();
-//
-//                int nOrder = MovieContract.MovieOrderEntry.GetSortTypeIntFromInterface(selectionArgs[1]);
-//                int nPage = Integer.parseInt(selectionArgs[0]);
-//                //TODO: other paramters from selectionArgs
-//                retCursor = service.GetMovieSummaries(nOrder, nPage);
-//                break;
-//            }
-//
-//            case MOVIE_DETAIL_ID: {
-//                DbService service = new DbService();
-//                retCursor = service.GetMovieSummaryCursorByMovieId(Long.parseLong(selection));
-//                break;
-//            }
-//        }
-//
-//        if (null != retCursor) {
-//            retCursor.setNotificationUri(getContext().getContentResolver(), uri);
-//        }
-//        return retCursor;
-//    }
-//
-//    /**
-//     * Helper method to get the value at a position in an array or a default value
-//     *
-//     * @param args          the array in which to search for a value
-//     * @param nPos          the position where the value should be found
-//     * @param sDefaultValue if the value was not found at the specified position, return the default value
-//     * @return
-//     */
-//    private String getParameter(String[] args, int nPos, String sDefaultValue) {
-//        if (null == args || args.length < nPos + 1) {
-//            return sDefaultValue;
-//        }
-//
-//        return args[nPos];
-//    }
-//
-//
-//
-//    @Override
-//    public Uri insert(Uri uri, ContentValues values) {
-//        final int match = sUriMatcher.match(uri);
-//        Uri returnUri = null;
-//
-//        switch (match) {
-//            case SETTINGS: {
-//                DbService service = new DbService();
-//                UrlSettings url = DataTransformer.getUrlSetting(values);
-//                long id = service.InsertUrlSetting(url);
-//                returnUri = MovieContract.SettingEntry.buildSettingUri(id);
-//                break;
-//            }
-//            case OPERATIONS: {
-//                DbService service = new DbService();
-//                SyncOperation ops = DataTransformer.getSyncOperation(values);
-//                long id = service.InsertSyncOperation(ops);
-//                returnUri = MovieContract.SyncOperationEntry.buildSettingUri(id);
-//                break;
-//            }
-//            case MOVIE_SUMMARY: {
-//                DbService service = new DbService();
-//                MovieSummary movie = DataTransformer.getMovieSummary(service, values);
-//                movie.save();
-//                returnUri = MovieContract.MovieSummaryEntry.buildMovieSummaryUri(movie.getMovieId());
-//                break;
-//            }
-//            default:
-//                break;
-//
-//
-//        }
-//
-//        getContext().getContentResolver().notifyChange(uri, null);
-//        return returnUri;
-//    }
-//
-//    @Override
-//    public int delete(Uri uri, String selection, String[] selectionArgs) {
-//        final int match = sUriMatcher.match(uri);
-//        int nCount = 0;
-//
-//        String[] vIds = (null == selection ? null : selection.split(Pattern.quote(";")));
-//
-//        switch (match) {
-//            case SETTINGS: {
-//                DbService service = new DbService();
-//                if (null == vIds) {
-//                    service.DeleteAllUrlSettings();
-//                } else {
-//                    for (int i = 0; i < vIds.length; i++) {
-//                        service.DeleteUrlSettings(Long.parseLong(vIds[i]));
-//                        nCount++;
-//                    }
-//                }
-//                break;
-//            }
-//            case OPERATIONS: {
-//                DbService service = new DbService();
-//                service.DeleteAllSyncOperationAndOrders();
-//                break;
-//            }
-//            case MOVIE_SUMMARY: {
-//                DbService service = new DbService();
-//                if (null == vIds) {
-//                    service.DeleteAllMovieSummary();
-//                } else {
-//                    for (int i = 0; i < vIds.length; i++) {
-//                        service.DeleteMovieSummary(Long.parseLong(vIds[i]));
-//                        nCount++;
-//                    }
-//                }
-//                break;
-//            }
-//            default:
-//                return 0;
-//
-//
-//        }
-//
-//        getContext().getContentResolver().notifyChange(uri, null);
-//        return nCount;
-//    }
-//
-//
-//    @Override
-//    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-//        final int match = sUriMatcher.match(uri);
-//
-//        switch (match) {
-//            case SETTINGS: {
-//                DbService service = new DbService();
-//                UrlSettings url = DataTransformer.getUrlSetting(values);
-//                service.InsertUrlSetting(url);
-//                break;
-//            }
-//            case MOVIE_SUMMARY: {
-//                DbService service = new DbService();
-//                MovieSummary movie = DataTransformer.getMovieSummary(service, values);
-//                service.InsertMovieSummary(movie);
-//                break;
-//            }
-//            default:
-//                return 0;
-//
-//
-//        }
-//
-//        getContext().getContentResolver().notifyChange(uri, null);
-//        return 1;
-//    }
-//
-//    @Override
-//    public int bulkInsert(Uri uri, ContentValues[] values) {
-//        int nInsert = 0;
-//
-//        final int match = sUriMatcher.match(uri);
-//        switch (match) {
-//            case MOVIE_SUMMARY:
-//                try {
-//                    //TODO: store total pages and total results (maybe in app settings)
-//                    int page = values[0].getAsInteger(MovieContract.MovieOrderEntry.PAGINATION_CURRENT_PAGE);
-//                    int totalPages = values[0].getAsInteger(MovieContract.MovieOrderEntry.PAGINATION_TOTAL_PAGES);
-//                    int totalResults = values[0].getAsInteger(MovieContract.MovieOrderEntry.PAGINATION_TOTAL_RESULTS);
-//                    int sortType = values[0].getAsInteger(MovieContract.MovieOrderEntry.SORT_TYPE);
-//                    long operationid = values[0].getAsLong(MovieContract.MovieOrderEntry.OPERATION_ID);
-//
-//                    DbService service = new DbService();
-//
-//                    SyncOperation sync = service.GetSyncOperationById(operationid);
-//
-//                    service.DeleteMovieOrder(page, sortType);
-//
-//                    for (int i = 1; i < values.length; i++) {
-//                        MovieSummary movieSummary = DataTransformer.getMovieSummary(service, values[i]);
-//                        service.InsertMovieSummary(movieSummary);
-//
-//                        MovieOrder movieOrder = new MovieOrder();
-//                        movieOrder.setDateUpdated(MovieContract.normalizeDate(System.currentTimeMillis()));
-//                        movieOrder.setMovieSummary(movieSummary);
-//                        movieOrder.setPage(page);
-//                        movieOrder.setPosition(values[i].getAsInteger(MovieContract.MovieOrderEntry.MOVIE_SUMMARY_POSITION));
-//                        movieOrder.setSortType(sortType);
-//                        movieOrder.setSyncOperation(sync);
-//
-//                        service.InsertMovieOrder(movieOrder, movieSummary);
-//                        nInsert++;
-//                    }
-//
-//                    getContext().getContentResolver().notifyChange(uri, null);
-//
-//                } catch (Exception e) {
-//                    return 0;
-//                }
-//
-//                break;
-//            default:
-//                throw new UnsupportedOperationException("Unknown uri: " + uri);
-//        }
-//        return nInsert;
-//    }
-//
-//
-//
-//    // You do not need to call this method. This is a method specifically to assist the testing
-//    // framework in running smoothly. You can read more at:
-//    // http://developer.android.com/reference/android/content/ContentProvider.html#shutdown()
-//    @Override
-//    @TargetApi(11)
-//    public void shutdown() {
-//        //mOpenHelper.close();
-//        super.shutdown();
-//    }
-//}

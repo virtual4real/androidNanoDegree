@@ -17,12 +17,13 @@ public class MovieDetailActivity extends AppCompatActivity {
 
             Bundle arguments = new Bundle();
             arguments.putParcelable(MovieDetailFragment.DETAIL_URI, getIntent().getData());
+            arguments.putBoolean(MovieDetailFragment.HAS_TWO_PANE, false);
 
             MovieDetailFragment fragment = new MovieDetailFragment();
             fragment.setArguments(arguments);
 
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.movie_detail_container, (Fragment) fragment)
+                    .add(R.id.movie_detail_container, fragment)
                     .commit();
 
 

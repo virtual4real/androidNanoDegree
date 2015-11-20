@@ -10,10 +10,7 @@ import net.simonvt.schematic.annotation.DataType;
 import net.simonvt.schematic.annotation.NotNull;
 import net.simonvt.schematic.annotation.PrimaryKey;
 
-/**
- * UrlSettings contains configuration information
- * provided by the rest api regarding the image path construction.
- */
+
 public interface UrlSettingsColumns {
 
     @DataType(DataType.Type.INTEGER)

@@ -14,6 +14,15 @@ public class MovieSummaryItem {
     private int nMovieId;
     private int nYear;
     private float dRating;
+    private int nFavorite;
+
+    public int getFavorite() {
+        return nFavorite;
+    }
+
+    public void setFavorite(int n) {
+        nFavorite = n;
+    }
 
     public int getMovieId() {
         return nMovieId;
@@ -63,6 +72,7 @@ public class MovieSummaryItem {
         item.setMovieId(cursor.getInt(cursor.getColumnIndex(MovieSummaryColumns.MOVIE_ID)));
         item.setRating(cursor.getFloat(cursor.getColumnIndex(MovieSummaryColumns.VOTE_AVERAGE)));
         item.setYear(cursor.getInt(cursor.getColumnIndex(MovieSummaryColumns.YEAR_OF_RELEASE)));
+        item.setFavorite(cursor.getInt(cursor.getColumnIndex(MovieSummaryColumns.IS_FAVORITE)));
 
         return item;
     }

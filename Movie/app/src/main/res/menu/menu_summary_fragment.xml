@@ -5,33 +5,33 @@
 
     <item
         android:id="@+id/OrderId"
-        android:title="OrderBy"
+        android:title="@string/menu_orderby"
         app:showAsAction="always">
 
         <menu xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:app="http://schemas.android.com/apk/res-auto">
             <item
                 android:id="@+id/popularity"
-                android:title="popularity"
+                android:title="@string/menu_popularity"
                 android:icon="@drawable/popularity"
                 app:showAsAction="ifRoom|withText" />
 
             <item
                 android:id="@+id/vote"
-                android:title="vote"
+                android:title="@string/menu_vote"
                 android:icon="@drawable/voting"
                 app:showAsAction="ifRoom|withText" />
 
             <item
                 android:id="@+id/favorite"
-                android:title="favorite"
+                android:title="@string/menu_favorite"
                 android:icon="@drawable/favourite"
                 app:showAsAction="ifRoom|withText"
-                android:visible="false" />
+                android:visible="true" />
 
             <item
                 android:id="@+id/release"
-                android:title="release date"
+                android:title="@string/menu_release_date"
                 android:icon="@drawable/release"
                 app:showAsAction="ifRoom|withText" />
         </menu>
@@ -41,6 +41,6 @@
         android:id="@+id/sortId"
         android:title=""
         app:showAsAction="always"
-        android:actionLayout="@layout/asc_desc_layout"></item>
+        android:actionLayout="@layout/asc_desc_layout" />
 
 </menu>

@@ -11,14 +11,6 @@ import net.simonvt.schematic.annotation.References;
  * Created by ioanagosman on 30/09/15.
  */
 
-/**
- * MovieOrder table contains a reference to a MovieSummary and the information about the
- * order of this MovieSummary in one of the possible sort types.
- * MovieOrder also contains a reference to the SyncOperation that corresponds to the data.
- * The SyncOperation contains the parameters (min date, max date, min vote, adult, video)
- * used to query data from the rest api.
- */
-
 
 public interface MovieOrderColumns {
     @DataType(DataType.Type.INTEGER)

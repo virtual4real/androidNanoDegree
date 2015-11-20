@@ -32,6 +32,11 @@ public class MovieDatabase {
         public static final String SYNC_OPERATION = "syncoperation";
         @Table(UrlSettingsColumns.class)
         public static final String URL_SETTINGS = "urlsettings";
+
+        @Table(MovieTrailerColumns.class)
+        public static final String MOVIE_TRAILER = "movietrailer";
+        @Table(MovieReviewColumns.class)
+        public static final String MOVIE_REVIEW = "moviereview";
     }
 
     /*

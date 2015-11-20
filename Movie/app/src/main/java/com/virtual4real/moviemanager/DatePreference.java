@@ -79,10 +79,9 @@ public class DatePreference extends DialogPreference {
     private String getStorageString() {
         String s = String.valueOf(month);
         String d = String.valueOf(day);
-        String time = String.valueOf(year) + (1 == s.length() ? "0" + s : s) +
+        return String.valueOf(year) + (1 == s.length() ? "0" + s : s) +
                 (1 == d.length() ? "0" + d : d);
 
-        return time;
     }
 
     @Override
@@ -104,7 +103,7 @@ public class DatePreference extends DialogPreference {
     public String getSummaryDate() {
         final Calendar c = Calendar.getInstance();
         c.set(year, month, day);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat dateFormat = new SimpleDateFormat(getContext().getResources().getString(R.string.date_time_format)); // "yyyy-MM-dd");
         return dateFormat.format(c.getTime());
     }
 

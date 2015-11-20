@@ -12,13 +12,12 @@
     </style>
 
     <style name="ActionBar.Solid.MovieManager.NoTitle" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
-        <item name="displayOptions">useLogo|showHome</item>
+        <item name="displayOptions">useLogo|showTitle</item>
         <item name="logo">@drawable/moviemanager</item>
-
-        <item name="android:background">@android:color/transparent</item>
+        <item name="android:background">@color/primary</item>
 
         <!-- Support library compatibility -->
-        <item name="background">@android:color/transparent</item>
+        <item name="background">@color/primary</item>
     </style>
 
     <style name="movieRatingBar" parent="@android:style/Widget.RatingBar">
@@ -35,6 +34,14 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="AppThemeSummary" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="windowActionBar">true</item>
+        <item name="android:windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+    </style>
+
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
@@ -47,6 +54,35 @@
         <item name="android:paddingTop">24dp</item>
         <item name="android:paddingBottom">24dp</item>
         <item name="android:orientation">vertical</item>
+    </style>
+
+
+    <style name="DetailCardHeader">
+        <item name="android:background">@color/primary_bar</item>
+    </style>
+
+    <style name="DetailCardHeaderTitle">
+        <item name="android:layout_marginLeft">5dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Headline</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="DetailCardHeaderText">
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Body1</item>
+        <item name="android:layout_marginLeft">10dp</item>
+        <item name="android:layout_marginRight">10dp</item>
+    </style>
+
+    <style name="ReviewHeader">
+        <item name="android:background">@color/grey</item>
+    </style>
+
+    <style name="ReviewTitle">
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Subhead</item>
+        <item name="android:layout_marginLeft">5dp</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:layout_marginRight">5dp</item>
     </style>
 
 </resources>

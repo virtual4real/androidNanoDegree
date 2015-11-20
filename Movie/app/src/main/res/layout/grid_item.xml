@@ -53,16 +53,49 @@
                     android:layout_marginBottom="2dp"
                     android:paddingLeft="5dp"
                     android:paddingRight="2dp"
-                    android:layout_gravity="bottom"
-                    android:gravity="center_vertical"
-                    android:background="#ff444444"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:background="@color/white"
                     android:textColor="#fff"
                     android:textSize="12sp"
-                    android:text=""
+                    android:text="@string/message_loading"
                     android:layout_alignParentBottom="false"
                     android:layout_alignParentLeft="true"
-                    android:layout_alignParentEnd="false"
-                    android:layout_above="@+id/tv_year" />
+                    android:layout_alignParentEnd="false" />
+
+                <TableLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:stretchColumns="0,1,2"
+                    android:layout_alignParentBottom="true"
+                    android:background="@color/white"
+                    android:alpha="0.7"
+                    android:gravity="center">
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <RatingBar
+                            android:id="@+id/ratingBar"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/movieRatingBar"
+                            android:numStars="5"
+                            android:stepSize="0.5"
+                            android:layout_gravity="center" />
+
+                        <TextView
+                            android:id="@+id/tv_year"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:layout_gravity="center" />
+                    </TableRow>
+
+                </TableLayout>
+
 
                 <TextView
                     android:id="@+id/tv_species"
@@ -77,35 +110,22 @@
                     android:textColor="#fff"
                     android:textSize="12sp"
                     android:text=""
-                    android:layout_alignParentBottom="false"
+                    android:layout_alignParentBottom="true"
                     android:layout_alignParentLeft="true"
-                    android:layout_alignParentEnd="false"
-                    android:layout_above="@+id/tv_year" />
-
-                <TextView
-                    android:id="@+id/tv_year"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:alpha="0.7"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentBottom="true" />
-
-                <RatingBar
-                    android:id="@+id/ratingBar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    style="@style/movieRatingBar"
-                    android:numStars="5"
-                    android:stepSize="0.5"
-                    android:alpha="0.7"
-                    android:layout_alignParentRight="true"
-                    android:layout_alignParentEnd="true"
-                    android:layout_alignParentBottom="true" />
+                    android:layout_alignParentEnd="false" />
 
             </RelativeLayout>
+
+            <ImageButton
+                android:id="@+id/favorite_summary"
+                android:layout_width="@dimen/favorite_summary_image"
+                android:layout_height="@dimen/favorite_summary_image"
+                android:background="@color/white"
+                android:src="@drawable/favourite"
+                android:alpha="0.8"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:layout_marginBottom="@dimen/favorite_summary_space" />
 
 
         </RelativeLayout>

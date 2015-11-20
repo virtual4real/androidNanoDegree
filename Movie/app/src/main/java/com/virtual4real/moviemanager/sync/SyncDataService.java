@@ -13,6 +13,7 @@ import android.net.Uri;
 import com.virtual4real.moviemanager.R;
 import com.virtual4real.moviemanager.Utils;
 import com.virtual4real.moviemanager.data.MovieProvider;
+import com.virtual4real.moviemanager.database.MovieDetailColumns;
 import com.virtual4real.moviemanager.database.MovieOrderColumns;
 import com.virtual4real.moviemanager.database.MovieSummaryColumns;
 import com.virtual4real.moviemanager.database.SyncOperationColumns;
@@ -58,7 +59,6 @@ public class SyncDataService {
     }
 
 
-    //REPLACED:  MovieContract.SyncOperationEntry.CONTENT_URI
     public long GetOperationIdForParameters(SearchParameters sch) {
         Integer nAdult = sch.isIncludesAdult() ? 1 : 0;
         Integer nVideo = sch.isIncludesVideo() ? 1 : 0;
@@ -84,7 +84,6 @@ public class SyncDataService {
 
     }
 
-    //REPLACED: MovieContract.SyncOperationEntry.CONTENT_URI
     public long InsertNewSyncOperation(SearchParameters sch) {
         Uri uri = ctx.getContentResolver().insert(MovieProvider.getOperationUri(),
                 DataTransformer.getSyncOperationContentValues(sch));
@@ -144,7 +143,7 @@ public class SyncDataService {
         getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_RELEASE_ASC, sch, false, nOperationId);
         getMoviesByPageAndSortOrder(methods, nPage, RestApiContract.SORT_KEY_RELEASE_DESC, sch, false, nOperationId);
 
-        //REPLACED: MovieContract.MovieSummaryEntry.CONTENT_URI
+
         if (notifyContentChange) {
             ctx.getContentResolver().notifyChange(MovieProvider.getMovieSummaryUri(), null, false);
         }
@@ -153,7 +152,6 @@ public class SyncDataService {
     private void getMoviesByPageAndSortOrder(IApiMethods methods, int nPage, final String sSortOrder,
                                              SearchParameters sch, final boolean notifyContentChange, final long nOperationId) {
 
-        //REPLACED: MovieContract.MovieOrderEntry.CONTENT_URI
         boolean bGetFromService = false;
         int nSortType = MovieProvider.MovieOrderHelper.GetSortTypeInt(sSortOrder);
         Cursor cursor =
@@ -196,7 +194,7 @@ public class SyncDataService {
 
 
                 ContentValues[] movieValues =
-                        DataTransformer.getMovieSummaryContentValues(movieResult.getResults());
+                        DataTransformer.getMovieSummaryContentValues(ctx, movieResult.getResults());
 
                 for (int i = 0; i < movieValues.length; i++) {
                     String nMovieId = (String) movieValues[i].get(MovieSummaryColumns.MOVIE_ID);
@@ -229,13 +227,6 @@ public class SyncDataService {
 
                 }
 
-//REPLACED: MovieContract.MovieSummaryEntry.CONTENT_URI,
-//                int nInserted = ctx.getContentResolver().bulkInsert(
-//                        MovieProvider.getMovieSummaryUri(),
-//                        movieValues
-//                );
-
-                //REPLACED: MovieContract.MovieSummaryEntry.CONTENT_URI
                 if (notifyContentChange) {
                     ctx.getContentResolver().notifyChange(MovieProvider.getMovieSummaryUri(), null, false);
                 }
@@ -255,8 +246,7 @@ public class SyncDataService {
 
     private String getTypeOfOrder(String sInterface, String sOrder, String asc, String desc) {
         if (null == sInterface) {
-            String str = "bla bla";
-            str = null;
+            return null;
         }
 
         if (sInterface.startsWith(sOrder)) {
@@ -275,7 +265,6 @@ public class SyncDataService {
     private void getSettings(IApiMethods methods) {
         boolean bExecute = false;
 
-        //REPLACED: MovieContract.SettingEntry.CONTENT_URI
         Cursor cursor = ctx.getContentResolver()
                 .query(MovieProvider.getSeetingsUri(), null, null, null, null);
         if (cursor.getCount() != 1) {
@@ -301,7 +290,6 @@ public class SyncDataService {
 
                 ContentValues settingsValues = DataTransformer.getSettingsContentValues(setting);
 
-//REPLACED: MovieContract.SettingEntry.CONTENT_URI
                 Uri insertedUri = ctx.getContentResolver().insert(
                         MovieProvider.getSeetingsUri(),
                         settingsValues
@@ -353,10 +341,33 @@ public class SyncDataService {
         Callback callbackMovieDetail = new Callback() {
             @Override
             public void success(Object o, Response response) {
+                //TODO: when reviews have more than one page, get all data
                 JsnMovieDetail movieDetailResult = (JsnMovieDetail) o;
 
-                //getContext().getContentResolver()
-                // .notifyChange(MovieContract.MovieSummaryEntry.CONTENT_URI, null, false);
+                int nMovieId = Integer.parseInt(movieDetailResult.getId());
+
+                ContentValues movieDetailValues = DataTransformer.getMovieDetailsContentValues(movieDetailResult);
+                ContentValues[] movieTrailers = DataTransformer.getMovieTrailers(movieDetailResult);
+                ContentValues[] movieReviews = DataTransformer.getMovieReviews(movieDetailResult);
+
+                if (null != movieDetailValues) {
+                    insertOrUpdateMovieDetails(movieDetailValues, nMovieId);
+                }
+
+                if (null != movieTrailers) {
+                    deleteAndInsertMovieTrailers(movieTrailers, nMovieId);
+                }
+
+                if (null != movieReviews) {
+                    deleteAndInsertMovieReviews(movieReviews, nMovieId);
+                }
+
+                ctx.getContentResolver()
+                        .notifyChange(MovieProvider.getMovieDetailUri(nMovieId), null, false);
+                ctx.getContentResolver()
+                        .notifyChange(MovieProvider.getMovieReviewUri(nMovieId), null, false);
+                ctx.getContentResolver()
+                        .notifyChange(MovieProvider.getMovieTrailerUri(nMovieId), null, false);
             }
 
             @Override
@@ -364,7 +375,38 @@ public class SyncDataService {
                 Utils.SendNotification(ctx, "Popular Movies", "Failure to get movie detail - " + retrofitError.getMessage());
             }
         };
-        methods.getMovieDetail(nMovieId, API_KEY_VALUE, callbackMovieDetail);
+        methods.getMovieDetail(nMovieId, API_KEY_VALUE, RestApiContract.APPEND_TO_RESPONSE_DETAIL, callbackMovieDetail);
+
+    }
+
+    private void deleteAndInsertMovieReviews(ContentValues[] movieReviews, int nMovieId) {
+        ctx.getContentResolver().delete(MovieProvider.getMovieReviewUri(nMovieId),
+                MovieDetailColumns.MOVIE_ID + " = ?", new String[]{String.valueOf(nMovieId)});
+
+        ctx.getContentResolver().bulkInsert(MovieProvider.getMovieReviewUri(nMovieId), movieReviews);
+    }
+
+    private void deleteAndInsertMovieTrailers(ContentValues[] movieTrailers, int nMovieId) {
+        ctx.getContentResolver().delete(MovieProvider.getMovieTrailerUri(nMovieId),
+                MovieDetailColumns.MOVIE_ID + " = ?", new String[]{String.valueOf(nMovieId)});
+
+        ctx.getContentResolver().bulkInsert(MovieProvider.getMovieTrailerUri(nMovieId), movieTrailers);
+    }
+
+    private void insertOrUpdateMovieDetails(ContentValues movieDetailValues, int nMovieId) {
+        Cursor cursor =
+                ctx.getContentResolver().query(MovieProvider.getMovieDetailUri(nMovieId), null, null, null, null);
+
+        if (0 == cursor.getCount()) {
+            cursor.close();
+            ctx.getContentResolver().insert(MovieProvider.getMovieDetailUri(nMovieId), movieDetailValues);
+        } else {
+            cursor.close();
+            ctx.getContentResolver().update(MovieProvider.getMovieDetailUri(nMovieId), movieDetailValues,
+                    MovieDetailColumns.MOVIE_ID + " = ?", new String[]{String.valueOf(nMovieId)});
+        }
+
+
 
     }
 

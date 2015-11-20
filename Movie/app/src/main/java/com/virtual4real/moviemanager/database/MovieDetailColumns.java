@@ -8,13 +8,7 @@ import net.simonvt.schematic.annotation.AutoIncrement;
 import net.simonvt.schematic.annotation.DataType;
 import net.simonvt.schematic.annotation.NotNull;
 import net.simonvt.schematic.annotation.PrimaryKey;
-
-/**
- * This class represents the table MovieDetail and it is used by DBFlow.
- * MovieDetail table contains information about the movie, more detailed as
- * the MovieSummary class.
- * It is linked to the MovieSummary objects for which it extends the information.
- */
+import net.simonvt.schematic.annotation.References;
 
 
 public interface MovieDetailColumns {
@@ -28,7 +22,7 @@ public interface MovieDetailColumns {
     String DATE_UPDATED = "dateUpdated";
 
     @DataType(DataType.Type.INTEGER)
-    @NotNull
+    @References(table = MovieDatabase.Tables.MOVIE_SUMMARY, column = MovieSummaryColumns.MOVIE_ID)
     String MOVIE_ID = "movieId";
 
     @DataType(DataType.Type.INTEGER)
@@ -39,10 +33,6 @@ public interface MovieDetailColumns {
 
     @DataType(DataType.Type.TEXT)
     String HOMEPAGE = "homepage";
-
-
-    @DataType(DataType.Type.TEXT)
-    String OVERVIEW = "overview";
 
     @DataType(DataType.Type.TEXT)
     String STATUS = "status";

@@ -66,4 +66,7 @@ public interface MovieSummaryColumns {
     String BACKDROP_PATH = "backdropPath";
 
 
+    @DataType(DataType.Type.INTEGER)
+    @NotNull
+    String IS_FAVORITE = "isFavorite";
 }
