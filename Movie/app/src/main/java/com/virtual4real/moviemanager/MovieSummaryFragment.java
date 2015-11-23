@@ -10,8 +10,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -44,6 +47,15 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
     private int mTotalWidth = 0;
 
+    private int mScrollFirstItem = 0;
+    private float mScrollTopOffset = 0;
+
+    public interface CallbackSummary {
+        void onItemSelected(Uri dateUri, int nIndex);
+
+        void onItemSummaryFavoriteChanged(Uri dateUri);
+    }
+
     class SummaryImageSize {
         public int Width;
         public int NoColumns;
@@ -55,6 +67,9 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
         }
     }
+
+    @Bind(R.id.summary_toolbar)
+    Toolbar mToolbar;
 
     @Bind(R.id.recycler_view)
     RecyclerView mRecyclerView;
@@ -81,7 +96,7 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Add this line in order for this fragment to handle menu events.
+
         setHasOptionsMenu(true);
 
         mObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
@@ -122,7 +137,7 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
                 getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, frag);
 
                 if (bTwoPane) {
-                    ((MovieSummaryActivity) getActivity()).onItemSelected(null);
+                    ((MovieSummaryActivity) getActivity()).onItemSelected(null, 0);
                 }
             }
         });
@@ -175,7 +190,7 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
                 getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, frag);
 
                 if (bTwoPane) {
-                    ((MovieSummaryActivity) getActivity()).onItemSelected(null);
+                    ((MovieSummaryActivity) getActivity()).onItemSelected(null, 0);
                 }
                 return true;
             }
@@ -184,16 +199,6 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-//        int id = item.getItemId();
-////        if (id == R.id.action_refresh) {
-////            updateWeather();
-////            return true;
-////        }
-//        if (id == R.id.action_map) {
-//
-//            return true;
-//        }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -201,8 +206,6 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         String sortOrder = Utils.getOrderAndSortFromPreferences(getContext());
         //TODO: set the page in the selection string of the query call in the content provider
-
-        //Log.d("CURSOR____", sortOrder);
 
         //verify if there is data for the parameters
         //and if it is not call sync imediatelly
@@ -258,6 +261,10 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
             setImageBaseUrl();
             getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, this);
 
+        }
+
+        if (!bTwoPane) {
+            ((AppCompatActivity) getActivity()).setSupportActionBar(mToolbar);
         }
 
         return rootView;
@@ -385,33 +392,26 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-
-        //if(!(getActivity() instanceof MovieSummaryActivity)){ return; }
-
         //TODO: checkout the position in the model application
-
-        mAdapter = new MovieGridAdapter(getContext(), data, this, (Callback) getActivity(),
+        mAdapter = new MovieGridAdapter(getContext(), data, this, (CallbackSummary) getActivity(),
                 summ.NoSpaces, summ.Width, summ.Height, summ.TextHeight);
         mRecyclerView.setAdapter(mAdapter);
+
+        LinearLayoutManager manager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+        manager.scrollToPositionWithOffset(mScrollFirstItem, (int) mScrollTopOffset);
+
+        mScrollFirstItem = 0;
+        mScrollTopOffset = 0;
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-
-        //if(!(getActivity() instanceof MovieSummaryActivity)){ return; }
-
-        //mForecastAdapter.swapCursor(null);
-        mAdapter = new MovieGridAdapter(getContext(), null, this, (Callback) getActivity(),
+        mAdapter = new MovieGridAdapter(getContext(), null, this, (CallbackSummary) getActivity(),
                 summ.NoSpaces, summ.Width, summ.Height, summ.TextHeight);
 
         if (null != mRecyclerView) {
             mRecyclerView.setAdapter(mAdapter);
         }
-    }
-
-
-    public interface Callback {
-        void onItemSelected(Uri dateUri);
     }
 
     @Override
@@ -420,13 +420,33 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         ButterKnife.unbind(this);
     }
 
-    public void restartLoaderOnlyForFavorites() {
+    public boolean restartLoaderOnlyForFavorites() {
         String sortOrder = Utils.getOrderAndSortFromPreferences(getContext());
         int nSortType = MovieProvider.MovieOrderHelper.GetSortTypeInt(sortOrder);
 
         if (MovieProvider.FAVOURITE_SEARCH == nSortType) {
             getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, this);
+            return true;
         }
 
+
+        return false;
     }
+
+    public void RefreshAdapter(int nPosition, int nNewFavorite) {
+        if (null != mAdapter && 0 <= nPosition) {
+            //mAdapter.notifyItemChanged(nPosition);
+            LinearLayoutManager manager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+            mScrollFirstItem = manager.findFirstVisibleItemPosition();
+            View firstItemView = manager.findViewByPosition(mScrollFirstItem);
+            mScrollTopOffset = firstItemView.getTop();
+
+            getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, this);
+
+
+        }
+    }
+
+
+
 }

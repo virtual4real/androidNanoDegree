@@ -3,7 +3,9 @@ package com.virtual4real.moviemanager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,19 +13,31 @@ import android.view.MenuItem;
 import com.virtual4real.moviemanager.data.MovieProvider;
 import com.virtual4real.moviemanager.sync.MovieManagerSyncAdapter;
 
-public class MovieSummaryActivity extends AppCompatActivity implements MovieSummaryFragment.Callback {
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
+public class MovieSummaryActivity extends AppCompatActivity implements MovieSummaryFragment.CallbackSummary,
+        MovieDetailFragment.CallbackDetail {
 
     private boolean mTwoPane = false;
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
     private static final String SUMMARYFRAGMENT_TAG = "DFSUMTAG";
+
+    @Nullable
+    @Bind(R.id.summary_tablet_toolbar)
+    public Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_summary);
 
+
         if (null != findViewById(R.id.movie_detail_container)) {
             mTwoPane = true;
+
+            ButterKnife.bind(this);
+            setSupportActionBar(toolbar);
 
             if (null == savedInstanceState) {
                 getSupportFragmentManager().beginTransaction()
@@ -55,6 +69,8 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
 
 
         MovieManagerSyncAdapter.initializeSyncAdapter(this);
+
+
     }
 
 
@@ -85,7 +101,7 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
     }
 
     @Override
-    public void onItemSelected(Uri dateUri) {
+    public void onItemSelected(Uri dateUri, int nIndex) {
         long nMovieId = 0;
 
         if (null != dateUri) {
@@ -100,6 +116,7 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
             Bundle args = new Bundle();
             args.putParcelable(MovieDetailFragment.DETAIL_URI, dateUri);
             args.putBoolean(MovieDetailFragment.HAS_TWO_PANE, mTwoPane);
+            args.putInt(MovieDetailFragment.LIST_POSITION, nIndex);
 
             MovieDetailFragment fragment = new MovieDetailFragment();
             fragment.setArguments(args);
@@ -111,6 +128,34 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
         } else {
             Intent intent = new Intent(this, MovieDetailActivity.class).setData(dateUri);
             startActivity(intent);
+        }
+
+    }
+
+    @Override
+    public void onItemSummaryFavoriteChanged(Uri dateUri) {
+        if (null == dateUri || !mTwoPane) {
+            return;
+        }
+        long nMovieId = MovieProvider.getMovieSummaryId(dateUri);
+
+        MovieDetailFragment detailFrag =
+                (MovieDetailFragment) getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
+        if (null != detailFrag) {
+            detailFrag.RefreshFavorite(nMovieId);
+        }
+    }
+
+    @Override
+    public void onItemDetailFavoriteChanged(Uri dateUri, int nPosition, int nFavorite) {
+        if (null == dateUri || !mTwoPane) {
+            return;
+        }
+
+        MovieSummaryFragment summFrag =
+                (MovieSummaryFragment) getSupportFragmentManager().findFragmentByTag(SUMMARYFRAGMENT_TAG);
+        if (null != summFrag) {
+            summFrag.RefreshAdapter(nPosition, nFavorite);
         }
 
     }

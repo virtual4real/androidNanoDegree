@@ -341,7 +341,7 @@ public class SyncDataService {
         Callback callbackMovieDetail = new Callback() {
             @Override
             public void success(Object o, Response response) {
-                //TODO: when reviews have more than one page, get all data
+                //TODO: when reviews or trailers have more than one page, get all data
                 JsnMovieDetail movieDetailResult = (JsnMovieDetail) o;
 
                 int nMovieId = Integer.parseInt(movieDetailResult.getId());

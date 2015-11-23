@@ -2,6 +2,7 @@ package com.virtual4real.moviemanager;
 
 import android.content.ContentValues;
 import android.content.Intent;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -20,6 +21,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.ShareActionProvider;
 import android.support.v7.widget.Toolbar;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -51,14 +53,49 @@ import butterknife.ButterKnife;
 
 public class MovieDetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    public interface CallbackDetail {
+        void onItemDetailFavoriteChanged(Uri dateUri, int nIndex, int nFavorite);
+    }
+
+    class FavoriteChangeObserver extends ContentObserver {
+        Uri uri;
+        int pos;
+        int fav;
+
+        public FavoriteChangeObserver(Handler handler, Uri uri, int pos, int fav) {
+            super(handler);
+            this.uri = uri;
+            this.pos = pos;
+            this.fav = fav;
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            this.onChange(selfChange, null);
+            change();
+        }
+
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            change();
+        }
+
+        private void change() {
+            ((CallbackDetail) getActivity()).onItemDetailFavoriteChanged(uri, pos, fav);
+            getContext().getContentResolver().unregisterContentObserver(this);
+        }
+    }
+
     public static final String DETAIL_URI = "detail_uri";
     public static final String HAS_TWO_PANE = "two_pane";
+    public static final String LIST_POSITION = "list_position";
     private static final int DETAIL_LOADER = 0;
     private static final int TRAILER_LOADER = 1;
     private static final int REVIEWS_LOADER = 2;
     private static final int EXTRA_DETAIL_LOADER = 3;
 
     private boolean bTwoPane = false;
+    private int mPosition = 0;
     private ShareActionProvider mShareActionProvider;
 
     private Uri mUri;
@@ -141,21 +178,13 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
         } else {
             mUri = arguments.getParcelable(MovieDetailFragment.DETAIL_URI);
             bTwoPane = arguments.getBoolean(MovieDetailFragment.HAS_TWO_PANE);
+            mPosition = arguments.getInt(MovieDetailFragment.LIST_POSITION);
         }
 
         if (null == mUri) {
             SetControlsVisibility(View.INVISIBLE);
         } else {
             SetControlsVisibility(View.VISIBLE);
-
-            if (bTwoPane) {
-                AppBarLayout.LayoutParams params =
-                        (AppBarLayout.LayoutParams) collapsingToolbar.getLayoutParams();
-                params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL);
-                collapsingToolbar.setLayoutParams(params);
-                collapsingToolbar.requestLayout();
-
-            }
 
             if (null != mUri) {
                 long nid = MovieProvider.getMovieSummaryId(mUri);
@@ -166,7 +195,11 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
 
             fab.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
+                    FavoriteChangeObserver obs = new FavoriteChangeObserver(new Handler(), mUri, mPosition, (int) fab.getTag());
+
+                    getContext().getContentResolver().registerContentObserver(mUri, false, obs);
                     setFavorite(fab);
+
                 }
             });
 
@@ -453,5 +486,14 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
     }
 
 
+    public void RefreshFavorite(long nMovieId) {
+        long nCurrentMovieId = MovieProvider.getMovieSummaryId(mUri);
+        if (nCurrentMovieId != nMovieId) {
+            return;
+        }
+
+        setFavorite(fab);
+
+    }
 
 }

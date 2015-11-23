@@ -19,6 +19,8 @@ import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 import com.virtual4real.moviemanager.data.MovieProvider;
 
+import java.util.List;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
@@ -36,7 +38,7 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
 
 
     public MovieGridAdapter(Context context, Cursor cursor, MovieSummaryFragment frag,
-                            MovieSummaryFragment.Callback activity,
+                            MovieSummaryFragment.CallbackSummary activity,
                             int nSpace, int nWidth, int nHeight, int nTextHeight) {
         super(context, cursor, activity);
         ctx = context;
@@ -64,6 +66,8 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
         public TextView tvError;
         @Bind(R.id.favorite_summary)
         public ImageView imgFavorite;
+
+        public int mPosition = 0;
 
 
         public ViewHolder(View view, int nWidth, int nHeight, int nTextHeight, int nSpace) {
@@ -106,6 +110,8 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
                 .networkPolicy(
                         Utils.isConnected(this.mContext) ?
                                 NetworkPolicy.NO_CACHE : NetworkPolicy.OFFLINE)
+                        //TODO: error when no internet connection
+                        //TODO: compare all Picasso images
                 .error(R.id.tv_error)
                 .into(viewHolder.imgThumbnail, new Callback() {
                     @Override
@@ -131,11 +137,13 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
 
         viewHolder.rbRating.setRating(myListItem.getRating() * (float) 0.5);
 
+        viewHolder.mPosition = cursor.getPosition();
+
         View.OnClickListener onClick = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int nMovieId = v.getId();
-                mActivity.onItemSelected(MovieProvider.buildMovieSummaryUri(nMovieId));
+                mActivity.onItemSelected(MovieProvider.buildMovieSummaryUri(nMovieId), viewHolder.mPosition);
             }
         };
 
@@ -154,7 +162,11 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
 
                 setFavorite((ImageView) v, nFavorites, MovieProvider.buildMovieSummaryUri(nMovieId));
 
-                fragment.restartLoaderOnlyForFavorites();
+                //TODO: verify if the sort is favorite, the detail is open and the item is set to NOT favorite
+                //TODO: preserve scroll position when refreshing the favorite view
+                if (!fragment.restartLoaderOnlyForFavorites()) {
+                    mActivity.onItemSummaryFavoriteChanged(MovieProvider.buildMovieSummaryUriForFavorites(nMovieId));
+                }
             }
         };
         viewHolder.imgFavorite.setOnClickListener(onClickFavorites);

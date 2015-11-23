@@ -1,0 +1,7 @@
+<resources>
+    <dimen name="detail_scroll_top">50dp</dimen>
+    <dimen name="detail_backdrop_space">@dimen/card_margin</dimen>
+    <dimen name="detail_collapsing_space">50dp</dimen>
+
+
+</resources>

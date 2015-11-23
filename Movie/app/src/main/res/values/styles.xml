@@ -1,11 +1,6 @@
 <resources>
 
-    <!-- Base application theme. -->
-    <!-- style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-
-    </style -->
-
-    <style name="AppTheme" parent="Theme.AppCompat.Light">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="actionBarStyle">@style/ActionBar.Solid.MovieManager.NoTitle</item>
@@ -84,5 +79,79 @@
         <item name="android:layout_centerVertical">true</item>
         <item name="android:layout_marginRight">5dp</item>
     </style>
+
+    <style name="ReviewImage">
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Subhead</item>
+        <item name="android:layout_marginLeft">5dp</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:layout_marginRight">5dp</item>
+        <item name="android:scaleType">fitXY</item>
+        <item name="android:background">@null</item>
+
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+
+    <style name="DetailCollapsingToolbar">
+        <item name="expandedTitleMarginStart">48dp</item>
+        <item name="expandedTitleMarginEnd">64dp</item>
+        <item name="contentScrim">?attr/colorPrimary</item>
+        <item name="android:fitsSystemWindows">true</item>
+        <item name="layout_scrollFlags">scroll|exitUntilCollapsed</item>
+    </style>
+
+    <style name="DetailToolbarImage">
+        <item name="android:layout_gravity">center</item>
+        <item name="android:minWidth">20dp</item>
+        <item name="android:scaleType">fitXY</item>
+        <item name="android:fitsSystemWindows">true</item>
+        <item name="layout_collapseMode">parallax</item>
+    </style>
+
+    <style name="DetailToolbar">
+        <item name="layout_behavior">@string/appbar_scrolling_view_behavior</item>
+        <item name="android:layout_marginTop">@dimen/detail_collapsing_space</item>
+    </style>
+
+    <style name="DetailThumbnailImage">
+        <item name="android:layout_gravity">center</item>
+        <item name="android:maxWidth">133dp</item>
+        <item name="android:maxHeight">200dp</item>
+        <item name="android:scaleType">fitXY</item>
+        <item name="android:gravity">center</item>
+        <item name="android:contentDescription">@string/message_poster</item>
+    </style>
+
+
+    <style name="DetailTitle">
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center_horizontal</item>
+    </style>
+
+    <style name="OriginalTitle">
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:layout_marginTop">10dp</item>
+    </style>
+
+    <style name="DetailDate">
+        <item name="android:layout_gravity">bottom|right</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">right</item>
+    </style>
+
+    <style name="DetailCard">
+        <item name="android:layout_marginBottom">@dimen/card_margin</item>
+        <item name="android:layout_marginLeft">@dimen/card_margin</item>
+        <item name="android:layout_marginRight">@dimen/card_margin</item>
+    </style>
+
 
 </resources>

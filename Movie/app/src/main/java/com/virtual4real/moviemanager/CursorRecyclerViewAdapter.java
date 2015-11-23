@@ -14,7 +14,7 @@ import java.util.List;
 public abstract class CursorRecyclerViewAdapter<VH extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<VH> {
     protected Context mContext;
     protected Cursor mCursor;
-    protected MovieSummaryFragment.Callback mActivity;
+    protected MovieSummaryFragment.CallbackSummary mActivity;
     private boolean mDataValid;
     private DataSetObserver mDataSetObserver;
     private int mRowIdColumn;
@@ -22,7 +22,7 @@ public abstract class CursorRecyclerViewAdapter<VH extends RecyclerView.ViewHold
 
     List<MovieSummaryItem> mItems;
 
-    public CursorRecyclerViewAdapter(Context context, Cursor cursor, MovieSummaryFragment.Callback activity) {
+    public CursorRecyclerViewAdapter(Context context, Cursor cursor, MovieSummaryFragment.CallbackSummary activity) {
         mContext = context;
         mCursor = cursor;
         mActivity = activity;

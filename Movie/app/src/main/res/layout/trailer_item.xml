@@ -8,12 +8,12 @@
     <ImageView
         android:id="@+id/trailer_thumbnail"
         android:layout_width="match_parent"
+        android:layout_height="@dimen/trailer_video_max_height"
         android:maxWidth="@dimen/trailer_video_max_width"
         android:maxHeight="@dimen/trailer_video_max_height"
         android:gravity="center"
-        android:layout_height="@dimen/trailer_video_max_height"
         android:scaleType="fitXY"
-        android:contentDescription="Movie Trailer"
+        android:contentDescription="@string/message_trailer"
         android:layout_gravity="center" />
 
     <TextView

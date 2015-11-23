@@ -3,6 +3,7 @@
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/tools"
     android:orientation="vertical">
 
     <android.support.v7.widget.CardView
@@ -91,7 +92,9 @@
                             android:layout_height="wrap_content"
                             android:textSize="14sp"
                             android:textStyle="bold"
-                            android:layout_gravity="center" />
+                            android:layout_gravity="left" />
+
+
                     </TableRow>
 
                 </TableLayout>
@@ -116,16 +119,23 @@
 
             </RelativeLayout>
 
-            <ImageButton
+
+            <android.support.design.widget.FloatingActionButton
                 android:id="@+id/favorite_summary"
-                android:layout_width="@dimen/favorite_summary_image"
-                android:layout_height="@dimen/favorite_summary_image"
-                android:background="@color/white"
-                android:src="@drawable/favourite"
-                android:alpha="0.8"
+                android:layout_height="@dimen/favorite_summary_fab_size"
+                android:layout_width="@dimen/favorite_summary_fab_size"
+                android:alpha="0.4"
+
+                app:layout_anchor="@id/img_thumbnail"
+                app:layout_anchorGravity="bottom|right|end"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentRight="true"
-                android:layout_marginBottom="@dimen/favorite_summary_space" />
+                android:layout_marginBottom="@dimen/favorite_summary_space_bottom"
+                android:layout_marginRight="@dimen/favorite_summary_space_right"
+
+                android:src="@drawable/like"
+                android:clickable="true"
+                app:layout_collapseMode="parallax" />
 
 
         </RelativeLayout>

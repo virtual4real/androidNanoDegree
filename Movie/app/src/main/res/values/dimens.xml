@@ -25,7 +25,22 @@
     <dimen name="list_item_avatar_size">40dp</dimen>
     <dimen name="detail_card_margin">8dp</dimen>
 
-    <dimen name="favorite_summary_image">30dp</dimen>
-    <dimen name="favorite_summary_space">20dp</dimen>
+    <dimen name="detail_scroll_top">2dp</dimen>
+    <dimen name="detail_backdrop_space">0dp</dimen>
+    <dimen name="detail_collapsing_space">5dp</dimen>
+    <dimen name="detail_padding_thumbnail">4dp</dimen>
+    <dimen name="detail_margin_title">15dp</dimen>
+    <dimen name="detail_rating_space">10dp</dimen>
+    <dimen name="detail_rating_text_space">3dp</dimen>
+    <dimen name="detail_card_header">40dp</dimen>
+    <dimen name="detail_fab_margin">10dp</dimen>
+
+    <dimen name="detail_date_margin_top">10dp</dimen>
+    <dimen name="detail_date_margin_right">15dp</dimen>
+
+    <dimen name="favorite_summary_space_right">5dp</dimen>
+    <dimen name="favorite_summary_space_bottom">35dp</dimen>
+    <dimen name="favorite_summary_fab_size">55dp</dimen>
+
 
 </resources>

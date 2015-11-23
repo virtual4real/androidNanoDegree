@@ -1,10 +1,11 @@
 package com.virtual4real.moviemanager;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 
-public class MovieDetailActivity extends AppCompatActivity {
+public class MovieDetailActivity extends AppCompatActivity implements MovieDetailFragment.CallbackDetail {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,4 +34,8 @@ public class MovieDetailActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onItemDetailFavoriteChanged(Uri dateUri, int nPosition, int nFavorite) {
+        return;
+    }
 }
