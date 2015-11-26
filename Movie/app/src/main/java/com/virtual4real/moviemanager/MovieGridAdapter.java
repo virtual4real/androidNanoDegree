@@ -34,14 +34,14 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
     private int nHeight;
     private int nTextHeight;
     private MovieSummaryFragment fragment;
-    private Context ctx;
+    //private Context ctx;
 
 
     public MovieGridAdapter(Context context, Cursor cursor, MovieSummaryFragment frag,
                             MovieSummaryFragment.CallbackSummary activity,
                             int nSpace, int nWidth, int nHeight, int nTextHeight) {
         super(context, cursor, activity);
-        ctx = context;
+        //ctx = context;
         mBaseImagePath = Utils.getBaseImageUrl(context);
         this.nSpace = nSpace;
         this.nWidth = nWidth;
@@ -103,16 +103,13 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
     public void onBindViewHolder(final ViewHolder viewHolder, Cursor cursor) {
         MovieSummaryItem myListItem = MovieSummaryItem.fromCursor(cursor);
 
-        //TODO: image is taken from internet everytime if internet is working?
-        //where to define an expiration period for the cache ?
-        Picasso.with(mContext)
+        Picasso picasso = PicassoGateway.GetInstance(mContext).build();
+
+        picasso.with(mContext)
                 .load(mBaseImagePath + myListItem.getThumbnail())
                 .networkPolicy(
                         Utils.isConnected(this.mContext) ?
                                 NetworkPolicy.NO_CACHE : NetworkPolicy.OFFLINE)
-                        //TODO: error when no internet connection
-                        //TODO: compare all Picasso images
-                .error(R.id.tv_error)
                 .into(viewHolder.imgThumbnail, new Callback() {
                     @Override
                     public void onSuccess() {
@@ -122,6 +119,7 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
 
                     @Override
                     public void onError() {
+                        viewHolder.tvError.setText("Error download the image");
                     }
                 });
         viewHolder.imgThumbnail.setId(myListItem.getMovieId());
@@ -163,10 +161,9 @@ public class MovieGridAdapter extends CursorRecyclerViewAdapter<MovieGridAdapter
                 setFavorite((ImageView) v, nFavorites, MovieProvider.buildMovieSummaryUri(nMovieId));
 
                 //TODO: verify if the sort is favorite, the detail is open and the item is set to NOT favorite
-                //TODO: preserve scroll position when refreshing the favorite view
-                if (!fragment.restartLoaderOnlyForFavorites()) {
-                    mActivity.onItemSummaryFavoriteChanged(MovieProvider.buildMovieSummaryUriForFavorites(nMovieId));
-                }
+                fragment.restartLoaderOnlyForFavorites();
+                mActivity.onItemSummaryFavoriteChanged(MovieProvider.buildMovieSummaryUriForFavorites(nMovieId));
+
             }
         };
         viewHolder.imgFavorite.setOnClickListener(onClickFavorites);

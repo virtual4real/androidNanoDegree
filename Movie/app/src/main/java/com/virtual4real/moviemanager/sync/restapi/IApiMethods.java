@@ -2,6 +2,7 @@ package com.virtual4real.moviemanager.sync.restapi;
 
 import com.virtual4real.moviemanager.sync.poco.JsnMovieDetail;
 import com.virtual4real.moviemanager.sync.poco.JsnMovieSummaryResult;
+import com.virtual4real.moviemanager.sync.poco.JsnReviewsResult;
 import com.virtual4real.moviemanager.sync.poco.JsnSettings;
 
 import retrofit.Callback;
@@ -36,4 +37,11 @@ public interface IApiMethods {
                         @Query(RestApiContract.API_KEY) String key,
                         @Query(RestApiContract.APPEND_TO_RESPONSE) String appendTo,
                         Callback<JsnMovieDetail> cb);
+
+
+    @GET(RestApiContract.MOVIE_DETAIL_REVIEWS)
+    void getMovieReviews(@Path(RestApiContract.MOVIE_DETAIL_ID) long movieId,
+                         @Query(RestApiContract.API_KEY) String key,
+                         @Query(RestApiContract.PAGE_KEY) int page,
+                         Callback<JsnReviewsResult> cb);
 }

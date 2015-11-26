@@ -11,6 +11,7 @@ public class RestApiContract {
     public static final String CONFIGURATION_PATH = "/configuration";
     public static final String MOVIE_LIST_PATH = "/discover/movie";
     public static final String MOVIE_DETAIL = "/movie/{id}";
+    public static final String MOVIE_DETAIL_REVIEWS = "/movie/{id}/reviews";
     public static final String MOVIE_DETAIL_ID = "id";
 
 

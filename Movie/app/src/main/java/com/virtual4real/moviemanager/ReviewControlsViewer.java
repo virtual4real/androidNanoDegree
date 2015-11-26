@@ -14,8 +14,6 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.squareup.picasso.NetworkPolicy;
-import com.squareup.picasso.Picasso;
 import com.virtual4real.moviemanager.database.MovieReviewColumns;
 
 import java.util.List;

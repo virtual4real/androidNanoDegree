@@ -14,10 +14,10 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -105,15 +105,26 @@ public class TrailerControlsViewer {
 
             String sPath = TrailerControlsViewer.getPathForTrailerImage(ctx, key.Source);
 
-            //TODO: set the error control
-            ImageView thumbnailBox = (ImageView) itemView.findViewById(R.id.trailer_thumbnail);
-            Picasso.with(ctx)
+            final ImageView thumbnailBox = (ImageView) itemView.findViewById(R.id.trailer_thumbnail);
+
+            Picasso picasso = PicassoGateway.GetInstance(ctx).build();
+
+            picasso.with(ctx)
                     .load(sPath)
                     .networkPolicy(
                             Utils.isConnected(ctx) ?
                                     NetworkPolicy.NO_CACHE : NetworkPolicy.OFFLINE)
-                            //.error()
-                    .into(thumbnailBox);
+                    .into(thumbnailBox, new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            thumbnailBox.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onError() {
+                            thumbnailBox.setVisibility(View.INVISIBLE);
+                        }
+                    });
 
             trailersLayout.addView(itemView, getLayoutParams(nCol, nRow, dims.NoSpaces, dims.Width));
 

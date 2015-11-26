@@ -13,6 +13,8 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.DatePicker;
 
+import com.virtual4real.moviemanager.sync.MovieManagerSyncAdapter;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 

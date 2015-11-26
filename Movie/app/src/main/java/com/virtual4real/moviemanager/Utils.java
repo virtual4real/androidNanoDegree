@@ -8,11 +8,13 @@ import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.ContextCompat;
 
+import com.squareup.picasso.Picasso;
 import com.virtual4real.moviemanager.sync.restapi.RestApiContract;
 
 /**
@@ -84,12 +86,27 @@ public class Utils {
 
     public static String getMinDate(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString(context.getString(R.string.search_start_key), context.getString(R.string.default_min_date));
+        String sDate = prefs.getString(context.getString(R.string.search_start_key), context.getString(R.string.default_min_date));
+
+        //error in the rest api if date is 29 of february
+        if (sDate.endsWith("0229")) {
+            sDate = sDate.substring(0, sDate.length() - 1) + 8;
+        }
+
+        return sDate;
     }
 
     public static String getMaxDate(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString(context.getString(R.string.search_end_key), context.getString(R.string.default_max_date));
+        String sDate = prefs.getString(context.getString(R.string.search_end_key), context.getString(R.string.default_max_date));
+
+        //error in the rest api if date is 29 of february
+        if (sDate.endsWith("0229")) {
+            sDate = sDate.substring(0, sDate.length() - 1) + 8;
+        }
+
+        return sDate;
+
     }
 
     public static int getMinVotes(Context context) {
@@ -151,4 +168,6 @@ public class Utils {
         // WEATHER_NOTIFICATION_ID allows you to update the notification later on.
         mNotificationManager.notify(MOVIE_SUMMARY_NOTIFICATION_ID, mBuilder.build());
     }
+
+
 }

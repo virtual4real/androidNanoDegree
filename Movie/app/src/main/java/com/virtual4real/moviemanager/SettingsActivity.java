@@ -21,6 +21,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import com.virtual4real.moviemanager.sync.MovieManagerSyncAdapter;
+
 import java.util.List;
 
 /**
@@ -35,11 +37,19 @@ import java.util.List;
  * API Guide</a> for more information on developing a Settings UI.
  */
 public class SettingsActivity extends AppCompatPreferenceActivity {
+    private String mMinDate;
+    private String mMaxDate;
+    private int mNoVotes;
+    private boolean mIsAdult;
+    private boolean mIsVideo;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
     }
+
 
     /**
      * Set up the {@link android.app.ActionBar}, if the API is available.
@@ -65,7 +75,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 finish();
             }
         });
+
     }
+
 
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
@@ -108,8 +120,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
 
-    //TODO: call resync when a value is modified
-    //TODO: fix bug on no votes changed in settings (app will not load anymore)
     private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {

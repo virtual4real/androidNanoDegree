@@ -70,7 +70,7 @@ public class MovieManagerSyncAdapter extends AbstractThreadedSyncAdapter {
                         Utils.getIncludeVideo(getContext()));
                 sync.syncMovieSummary(account, authority, provider, syncResult, sch);
             } else {
-                sync.syncMovie(account, authority, provider, syncResult, nMovieId);
+                sync.syncMovie(nMovieId);
             }
 
 

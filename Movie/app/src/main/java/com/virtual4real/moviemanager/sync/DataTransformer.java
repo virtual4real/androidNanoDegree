@@ -18,6 +18,7 @@ import com.virtual4real.moviemanager.sync.poco.JsnImages;
 import com.virtual4real.moviemanager.sync.poco.JsnMovieDetail;
 import com.virtual4real.moviemanager.sync.poco.JsnMovieSummary;
 import com.virtual4real.moviemanager.sync.poco.JsnResults;
+import com.virtual4real.moviemanager.sync.poco.JsnRevResults;
 import com.virtual4real.moviemanager.sync.poco.JsnReviews;
 import com.virtual4real.moviemanager.sync.poco.JsnSettings;
 import com.virtual4real.moviemanager.sync.poco.JsnTrailers;
@@ -222,6 +223,30 @@ public class DataTransformer {
         }
 
         return trailerValues;
+    }
+
+    public static ContentValues[] getMovieReviews(JsnRevResults[] revs, int nMovieId) {
+
+        if (null == revs || 0 == revs.length) {
+            return null;
+        }
+
+
+        ContentValues[] reviewValues = new ContentValues[revs.length];
+
+        for (int i = 0; i < revs.length; i++) {
+            JsnRevResults res = revs[i];
+            reviewValues[i] = new ContentValues();
+
+            reviewValues[i].put(MovieReviewColumns.DATE_UPDATED, MovieProvider.normalizeDate(System.currentTimeMillis()));
+            reviewValues[i].put(MovieReviewColumns.MOVIE_ID, nMovieId);
+            reviewValues[i].put(MovieReviewColumns.AUTHOR, res.getAuthor());
+            reviewValues[i].put(MovieReviewColumns.CONTENT, res.getContent());
+            reviewValues[i].put(MovieReviewColumns.REVIEW_ID, res.getId());
+            reviewValues[i].put(MovieReviewColumns.URL, res.getUrl());
+        }
+
+        return reviewValues;
     }
 
     public static ContentValues[] getMovieReviews(JsnMovieDetail movieDetailResult) {

@@ -12,6 +12,7 @@ import android.view.MenuItem;
 
 import com.virtual4real.moviemanager.data.MovieProvider;
 import com.virtual4real.moviemanager.sync.MovieManagerSyncAdapter;
+import com.virtual4real.moviemanager.sync.restapi.RestApiContract;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -23,6 +24,12 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
     private static final String SUMMARYFRAGMENT_TAG = "DFSUMTAG";
 
+    private String mMinDate;
+    private String mMaxDate;
+    private int mMinVotes;
+    private boolean mIsVideo;
+    private boolean mIsAdult;
+
     @Nullable
     @Bind(R.id.summary_tablet_toolbar)
     public Toolbar toolbar;
@@ -32,6 +39,7 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_summary);
 
+        LoadPreferences();
 
         if (null != findViewById(R.id.movie_detail_container)) {
             mTwoPane = true;
@@ -142,7 +150,16 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
         MovieDetailFragment detailFrag =
                 (MovieDetailFragment) getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
         if (null != detailFrag) {
-            detailFrag.RefreshFavorite(nMovieId);
+            String sortOrder = Utils.getOrderAndSortFromPreferences(getApplicationContext());
+            if (sortOrder.equals(RestApiContract.SORT_KEY_FAVORITE_DESC) ||
+                    sortOrder.equals(RestApiContract.SORT_KEY_FAVORITE_ASC)) {
+
+                if (MovieProvider.getMovieSummaryId(detailFrag.getUri()) == nMovieId) {
+                    onItemSelected(null, 0);
+                }
+            } else {
+                detailFrag.RefreshFavorite(nMovieId);
+            }
         }
     }
 
@@ -158,21 +175,63 @@ public class MovieSummaryActivity extends AppCompatActivity implements MovieSumm
             summFrag.RefreshAdapter(nPosition, nFavorite);
         }
 
+
+        MovieDetailFragment detailFrag =
+                (MovieDetailFragment) getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
+        if (null != detailFrag) {
+            String sortOrder = Utils.getOrderAndSortFromPreferences(getApplicationContext());
+            if ((sortOrder.equals(RestApiContract.SORT_KEY_FAVORITE_DESC) ||
+                    sortOrder.equals(RestApiContract.SORT_KEY_FAVORITE_ASC)) && detailFrag.getUri() == dateUri) {
+
+                onItemSelected(null, 0);
+
+            }
+        }
+
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-//
-//        ForecastFragment ff = (ForecastFragment)getSupportFragmentManager().findFragmentById(R.id.fragment_forecast);
-//        if ( null != ff ) {
-//            ff.onLocationChanged();
-//        }
-        MovieDetailFragment df = (MovieDetailFragment) getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
-        df = null;
-//        if ( null != df ) {
-//            df.onLocationChanged(location);
-//        }
+
+        MovieSummaryFragment summaryFragment =
+                (MovieSummaryFragment) getSupportFragmentManager().findFragmentByTag(SUMMARYFRAGMENT_TAG);
+
+        if (!mTwoPane && null != summaryFragment) {
+            summaryFragment.RefreshAdapter(1, 0);
+        }
+
+        if (!PreferencesWereModified()) {
+            return;
+        }
+
+        if (null != summaryFragment) {
+            MovieManagerSyncAdapter.syncImmediately(getApplicationContext(), Utils.getOrderAndSortFromPreferences(getApplicationContext()), 1);
+        }
+
+        if (mTwoPane) {
+            onItemSelected(null, 0);
+        }
+
+    }
+
+
+    private boolean PreferencesWereModified() {
+        return mMinDate != Utils.getMinDate(getApplicationContext()) ||
+                mMaxDate != Utils.getMaxDate(getApplicationContext()) ||
+                mMinVotes != Utils.getMinVotes(getApplicationContext()) ||
+                mIsAdult != Utils.getIncludeAdult(getApplicationContext()) ||
+                mIsVideo != Utils.getIncludeVideo(getApplicationContext());
+    }
+
+
+    private void LoadPreferences() {
+        mMinDate = Utils.getMinDate(getApplicationContext());
+        mMaxDate = Utils.getMaxDate(getApplicationContext());
+        mMinVotes = Utils.getMinVotes(getApplicationContext());
+        mIsAdult = Utils.getIncludeAdult(getApplicationContext());
+        mIsVideo = Utils.getIncludeVideo(getApplicationContext());
     }
 
 

@@ -101,7 +101,7 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
         mObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
             public void onChange(boolean selfChange) {
-                //TODO: setup local variables... maybe
+                //TODO: maybe needed for pagination ???
                 //Log.d("ONCHANGE", "ONCHANGE_______________");
             }
         };
@@ -209,7 +209,6 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
         //verify if there is data for the parameters
         //and if it is not call sync imediatelly
-        //TODO: maybe send all parameters in syncImmediately (parcelable)
         SyncDataService sync = new SyncDataService(getContext());
         if (0 == sync.GetOperationIdForParameters(new SearchParameters(sortOrder, 1,
                 Utils.getMinDate(getContext()), Utils.getMaxDate(getContext()),
@@ -295,7 +294,6 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         summ.TextHeight = Math.round(nTextHeight);
         summ.NoSpaces = Math.round(nSpace);
 
-        //TODO: modify when the detail fragment is in the same screen as summary fragment
         return summ;
     }
 
@@ -392,7 +390,6 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        //TODO: checkout the position in the model application
         mAdapter = new MovieGridAdapter(getContext(), data, this, (CallbackSummary) getActivity(),
                 summ.NoSpaces, summ.Width, summ.Height, summ.TextHeight);
         mRecyclerView.setAdapter(mAdapter);
@@ -420,33 +417,34 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         ButterKnife.unbind(this);
     }
 
-    public boolean restartLoaderOnlyForFavorites() {
+    public void restartLoaderOnlyForFavorites() {
         String sortOrder = Utils.getOrderAndSortFromPreferences(getContext());
         int nSortType = MovieProvider.MovieOrderHelper.GetSortTypeInt(sortOrder);
 
         if (MovieProvider.FAVOURITE_SEARCH == nSortType) {
+            SaveScrollPosition();
             getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, this);
-            return true;
         }
 
-
-        return false;
     }
 
     public void RefreshAdapter(int nPosition, int nNewFavorite) {
         if (null != mAdapter && 0 <= nPosition) {
             //mAdapter.notifyItemChanged(nPosition);
-            LinearLayoutManager manager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
-            mScrollFirstItem = manager.findFirstVisibleItemPosition();
-            View firstItemView = manager.findViewByPosition(mScrollFirstItem);
-            mScrollTopOffset = firstItemView.getTop();
-
+            SaveScrollPosition();
             getLoaderManager().restartLoader(MOVIE_SUMMARY_LOADER, null, this);
 
 
         }
     }
 
+
+    private void SaveScrollPosition() {
+        LinearLayoutManager manager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
+        mScrollFirstItem = manager.findFirstVisibleItemPosition();
+        View firstItemView = manager.findViewByPosition(mScrollFirstItem);
+        mScrollTopOffset = firstItemView.getTop();
+    }
 
 
 }

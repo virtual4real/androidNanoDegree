@@ -103,6 +103,10 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
     private Uri mUriReviews;
     private Uri mUriExtraDetails;
 
+    public Uri getUri() {
+        return mUri;
+    }
+
     private ShareActionUtility mShareActionUtility = new ShareActionUtility();
 
     @Bind(R.id.cards)
@@ -294,14 +298,12 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
             cardTrailers.setVisibility(View.VISIBLE);
             loadTrailersControls(loader, data);
             getLoaderManager().destroyLoader(TRAILER_LOADER);
-            return;
         }
 
         if (((CursorLoader) loader).getUri() == mUriReviews) {
             cardReviews.setVisibility(View.VISIBLE);
             loadReviewControls(loader, data);
             getLoaderManager().destroyLoader(REVIEWS_LOADER);
-            return;
         }
 
         if (null != mShareActionProvider && mShareActionUtility.isComplete()) {
@@ -383,12 +385,13 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
             mImgPlaceholder.setVisibility(View.INVISIBLE);
             sPath = Utils.getBackdropImageUrl(getContext()) + sPath;
 
-            Picasso.with(getContext())
+            Picasso picasso = PicassoGateway.GetInstance(getContext()).build();
+
+            picasso.with(getContext())
                     .load(sPath)
                     .networkPolicy(
                             Utils.isConnected(getContext()) ?
                                     NetworkPolicy.NO_CACHE : NetworkPolicy.OFFLINE)
-                            //.error()
                     .into(mImgPlaceholder, new Callback() {
                         @Override
                         public void onSuccess() {
@@ -400,7 +403,7 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
 
                         @Override
                         public void onError() {
-
+                            mImgPlaceholder.setVisibility(View.INVISIBLE);
                         }
                     });
         } else {
@@ -412,13 +415,25 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
         if (null != sPath) {
             sPath = Utils.getBaseImageUrl(getContext()) + sPath;
 
-            Picasso.with(getContext())
+            Picasso picasso = PicassoGateway.GetInstance(getActivity()).build();
+
+
+            picasso.with(getContext())
                     .load(sPath)
                     .networkPolicy(
                             Utils.isConnected(getContext()) ?
                                     NetworkPolicy.NO_CACHE : NetworkPolicy.OFFLINE)
-                            //.error()
-                    .into(mImgThumbnail);
+                    .into(mImgThumbnail, new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            mImgThumbnail.setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onError() {
+                            mImgThumbnail.setVisibility(View.INVISIBLE);
+                        }
+                    });
         } else {
             mImgThumbnail.setVisibility(View.INVISIBLE);
         }
@@ -487,6 +502,9 @@ public class MovieDetailFragment extends Fragment implements LoaderManager.Loade
 
 
     public void RefreshFavorite(long nMovieId) {
+        if (null == mUri) {
+            return;
+        }
         long nCurrentMovieId = MovieProvider.getMovieSummaryId(mUri);
         if (nCurrentMovieId != nMovieId) {
             return;

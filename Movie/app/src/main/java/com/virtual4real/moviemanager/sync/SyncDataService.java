@@ -20,9 +20,15 @@ import com.virtual4real.moviemanager.database.SyncOperationColumns;
 import com.virtual4real.moviemanager.database.UrlSettingsColumns;
 import com.virtual4real.moviemanager.sync.poco.JsnMovieDetail;
 import com.virtual4real.moviemanager.sync.poco.JsnMovieSummaryResult;
+import com.virtual4real.moviemanager.sync.poco.JsnReviews;
+import com.virtual4real.moviemanager.sync.poco.JsnReviewsResult;
 import com.virtual4real.moviemanager.sync.poco.JsnSettings;
 import com.virtual4real.moviemanager.sync.restapi.IApiMethods;
+import com.virtual4real.moviemanager.sync.restapi.MovieDetailCallback;
+import com.virtual4real.moviemanager.sync.restapi.MovieDetailReviewCallback;
+import com.virtual4real.moviemanager.sync.restapi.MovieSummaryCallback;
 import com.virtual4real.moviemanager.sync.restapi.RestApiContract;
+import com.virtual4real.moviemanager.sync.restapi.SettingsCallback;
 
 import retrofit.Callback;
 import retrofit.RestAdapter;
@@ -92,8 +98,12 @@ public class SyncDataService {
     }
 
     private int DeleteAllMovieOrderData() {
-        return ctx.getContentResolver().delete(MovieProvider.getOperationUri(), null, null);
+        int nCount = ctx.getContentResolver().delete(MovieProvider.getOperationUri(), null, null);
+        nCount = ctx.getContentResolver().delete(MovieProvider.getMovieOrderUri(), null, null);
+
+        return nCount;
     }
+
 
     public void syncMovieSummary(Account account, String authority, ContentProviderClient provider,
                                  SyncResult syncResult, SearchParameters sch) {
@@ -178,65 +188,8 @@ public class SyncDataService {
             return;
         }
 
-        Callback callbackMovieSummary = new Callback() {
-            @Override
-            public void success(Object o, Response response) {
-                JsnMovieSummaryResult movieResult = (JsnMovieSummaryResult) o;
-
-                int nSortType = MovieProvider.MovieOrderHelper.GetSortTypeInt(sSortOrder);
-                int nTotalResults = Integer.parseInt(movieResult.getTotal_results());
-                int nTotalPages = Integer.parseInt(movieResult.getTotal_pages());
-                int nPage = Integer.parseInt(movieResult.getPage());
-
-                int nDeleted = ctx.getContentResolver().delete(MovieProvider.getMovieOrderUri(),
-                        MovieOrderColumns.PAGE + " = ? AND " + MovieOrderColumns.SORT_TYPE + " = ?",
-                        new String[]{Integer.toString(nPage), Integer.toString(nSortType)});
-
-
-                ContentValues[] movieValues =
-                        DataTransformer.getMovieSummaryContentValues(ctx, movieResult.getResults());
-
-                for (int i = 0; i < movieValues.length; i++) {
-                    String nMovieId = (String) movieValues[i].get(MovieSummaryColumns.MOVIE_ID);
-                    long nMovieSummaryId = 0;
-
-                    Cursor crs = ctx.getContentResolver().query(MovieProvider.getMovieSummaryUri(),
-                            new String[]{MovieSummaryColumns.ID},
-                            MovieSummaryColumns.MOVIE_ID + " = ?",
-                            new String[]{nMovieId}, null, null);
-
-                    if (null != crs && 0 != crs.getCount()) {
-                        crs.moveToFirst();
-
-                        nMovieSummaryId = crs.getLong(crs.getColumnIndex(MovieSummaryColumns.ID));
-
-                        crs.close();
-
-                        ctx.getContentResolver().update(MovieProvider.getMovieSummaryUri(), movieValues[i],
-                                MovieSummaryColumns.MOVIE_ID + " = ?",
-                                new String[]{nMovieId});
-                    } else {
-                        Uri uriNewMovieProvider =
-                                ctx.getContentResolver().insert(MovieProvider.getMovieSummaryUri(), movieValues[i]);
-                        nMovieSummaryId = MovieProvider.getMovieSummaryId(uriNewMovieProvider);
-                    }
-
-                    ContentValues cvMovieOrder =
-                            DataTransformer.getMovieOrderContentValues(nPage, nSortType, nOperationId, nMovieSummaryId, i);
-                    ctx.getContentResolver().insert(MovieProvider.getMovieOrderUri(), cvMovieOrder);
-
-                }
-
-                if (notifyContentChange) {
-                    ctx.getContentResolver().notifyChange(MovieProvider.getMovieSummaryUri(), null, false);
-                }
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                Utils.SendNotification(ctx, "Popular Movies", "Failure to get movies - " + retrofitError.getMessage());
-            }
-        };
+        MovieSummaryCallback callbackMovieSummary =
+                new MovieSummaryCallback(ctx, this, sSortOrder, nOperationId, notifyContentChange);
 
         methods.getMovieSummary(API_KEY_VALUE, sSortOrder, nPage, sch.getMinDate(), sch.getMaxDate(),
                 sch.getMinVotes(), sch.isIncludesVideo(), sch.isIncludesAdult(), callbackMovieSummary);
@@ -283,25 +236,7 @@ public class SyncDataService {
             return;
         }
 
-        Callback callbackSettings = new Callback() {
-            @Override
-            public void success(Object o, Response response) {
-                JsnSettings setting = (JsnSettings) o;
-
-                ContentValues settingsValues = DataTransformer.getSettingsContentValues(setting);
-
-                Uri insertedUri = ctx.getContentResolver().insert(
-                        MovieProvider.getSeetingsUri(),
-                        settingsValues
-                );
-                long settingId = ContentUris.parseId(insertedUri);
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                Utils.SendNotification(ctx, "Popular Movies", "Failure to get settings - " + retrofitError.getMessage());
-            }
-        };
+        SettingsCallback callbackSettings = new SettingsCallback(ctx);
         methods.getSettings(API_KEY_VALUE, callbackSettings);
 
     }
@@ -330,70 +265,44 @@ public class SyncDataService {
     }
 
 
-    public void syncMovie(Account account, String authority, ContentProviderClient provider,
-                          SyncResult syncResult, long nMovieId) {
+    public void syncReviews(long nMovieId, int nPage, int nTotalPages) {
 
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setEndpoint(API_URL)
                 .build();
         IApiMethods methods = restAdapter.create(IApiMethods.class);
 
-        Callback callbackMovieDetail = new Callback() {
-            @Override
-            public void success(Object o, Response response) {
-                //TODO: when reviews or trailers have more than one page, get all data
-                JsnMovieDetail movieDetailResult = (JsnMovieDetail) o;
+        MovieDetailReviewCallback callbackMovieReviews = new MovieDetailReviewCallback(ctx, this);
+        methods.getMovieReviews(nMovieId, API_KEY_VALUE, nPage, callbackMovieReviews);
+    }
 
-                int nMovieId = Integer.parseInt(movieDetailResult.getId());
+    public void syncMovie(long nMovieId) {
 
-                ContentValues movieDetailValues = DataTransformer.getMovieDetailsContentValues(movieDetailResult);
-                ContentValues[] movieTrailers = DataTransformer.getMovieTrailers(movieDetailResult);
-                ContentValues[] movieReviews = DataTransformer.getMovieReviews(movieDetailResult);
+        RestAdapter restAdapter = new RestAdapter.Builder()
+                .setEndpoint(API_URL)
+                .build();
+        IApiMethods methods = restAdapter.create(IApiMethods.class);
 
-                if (null != movieDetailValues) {
-                    insertOrUpdateMovieDetails(movieDetailValues, nMovieId);
-                }
-
-                if (null != movieTrailers) {
-                    deleteAndInsertMovieTrailers(movieTrailers, nMovieId);
-                }
-
-                if (null != movieReviews) {
-                    deleteAndInsertMovieReviews(movieReviews, nMovieId);
-                }
-
-                ctx.getContentResolver()
-                        .notifyChange(MovieProvider.getMovieDetailUri(nMovieId), null, false);
-                ctx.getContentResolver()
-                        .notifyChange(MovieProvider.getMovieReviewUri(nMovieId), null, false);
-                ctx.getContentResolver()
-                        .notifyChange(MovieProvider.getMovieTrailerUri(nMovieId), null, false);
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                Utils.SendNotification(ctx, "Popular Movies", "Failure to get movie detail - " + retrofitError.getMessage());
-            }
-        };
+        MovieDetailCallback callbackMovieDetail = new MovieDetailCallback(ctx, this);
         methods.getMovieDetail(nMovieId, API_KEY_VALUE, RestApiContract.APPEND_TO_RESPONSE_DETAIL, callbackMovieDetail);
 
     }
 
-    private void deleteAndInsertMovieReviews(ContentValues[] movieReviews, int nMovieId) {
+    public void deleteAndInsertMovieReviews(ContentValues[] movieReviews, int nMovieId) {
         ctx.getContentResolver().delete(MovieProvider.getMovieReviewUri(nMovieId),
                 MovieDetailColumns.MOVIE_ID + " = ?", new String[]{String.valueOf(nMovieId)});
 
         ctx.getContentResolver().bulkInsert(MovieProvider.getMovieReviewUri(nMovieId), movieReviews);
     }
 
-    private void deleteAndInsertMovieTrailers(ContentValues[] movieTrailers, int nMovieId) {
+    public void deleteAndInsertMovieTrailers(ContentValues[] movieTrailers, int nMovieId) {
         ctx.getContentResolver().delete(MovieProvider.getMovieTrailerUri(nMovieId),
                 MovieDetailColumns.MOVIE_ID + " = ?", new String[]{String.valueOf(nMovieId)});
 
         ctx.getContentResolver().bulkInsert(MovieProvider.getMovieTrailerUri(nMovieId), movieTrailers);
     }
 
-    private void insertOrUpdateMovieDetails(ContentValues movieDetailValues, int nMovieId) {
+    public void insertOrUpdateMovieDetails(ContentValues movieDetailValues, int nMovieId) {
         Cursor cursor =
                 ctx.getContentResolver().query(MovieProvider.getMovieDetailUri(nMovieId), null, null, null, null);
 
