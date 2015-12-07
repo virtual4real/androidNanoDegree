@@ -23,6 +23,7 @@ import android.widget.Toast;
 import it.jaschke.alexandria.data.AlexandriaContract;
 import it.jaschke.alexandria.services.BookService;
 import it.jaschke.alexandria.services.DownloadImage;
+import it.jaschke.alexandria.BarcodeCaptureActivity;
 
 
 public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -37,7 +38,8 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
     private String mScanFormat = "Format:";
     private String mScanContents = "Contents:";
 
-
+    public static final String ADD_BOOK_FRAGMENT_BARCODE_CAPTURE = "barcode_capture";
+    private static int barcodeCapture;
 
     public AddBook(){
     }
@@ -55,6 +57,8 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
 
         rootView = inflater.inflate(R.layout.fragment_add_book, container, false);
         ean = (EditText) rootView.findViewById(R.id.ean);
+
+        barcodeCapture = Integer.valueOf(getArguments().getString(ADD_BOOK_FRAGMENT_BARCODE_CAPTURE));
 
         ean.addTextChangedListener(new TextWatcher() {
             @Override
@@ -96,15 +100,26 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
                 // Hint: Use a Try/Catch block to handle the Intent dispatch gracefully, if you
                 // are using an external app.
                 //when you're done, remove the toast below.
-                Context context = getActivity();
-                CharSequence text = "This button should let you scan a book for its barcode!";
-                int duration = Toast.LENGTH_SHORT;
+                try {
+                    if(!(getActivity() instanceof IBarcodeActivity)){
+                        return;
+                    }
 
-                Toast toast = Toast.makeText(context, text, duration);
-                toast.show();
-
+                    ((IBarcodeActivity)getActivity()).StartBarcodeActivity(barcodeCapture, true, true);
+//                    Context context = getActivity();
+//                    CharSequence text = "This button should let you scan a book for its barcode!";
+//                    int duration = Toast.LENGTH_SHORT;
+//
+//                    Toast toast = Toast.makeText(context, text, duration);
+//                    toast.show();
+                }catch(Exception exex){
+                    //TODO: send a toast
+                    String str = "";
+                }
             }
         });
+
+
 
         rootView.findViewById(R.id.save_button).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -203,5 +218,14 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         activity.setTitle(R.string.scan);
+    }
+
+    public void SetIsbn(String isbn, int message, boolean bOk) {
+        if(bOk){
+            ((TextView) rootView.findViewById(R.id.ean)).setText(isbn);
+        }else{
+            ((TextView) rootView.findViewById(R.id.ean)).setText("");
+            //TODO: set an error message
+        }
     }
 }

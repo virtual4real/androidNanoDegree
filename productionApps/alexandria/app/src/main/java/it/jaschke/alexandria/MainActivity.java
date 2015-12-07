@@ -12,15 +12,21 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.CommonStatusCodes;
+import com.google.android.gms.vision.barcode.Barcode;
+
 import it.jaschke.alexandria.api.Callback;
 
 
-public class MainActivity extends ActionBarActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks, Callback {
+public class MainActivity extends ActionBarActivity implements
+        NavigationDrawerFragment.NavigationDrawerCallbacks,
+        Callback, IBarcodeActivity {
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -36,6 +42,10 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
     public static final String MESSAGE_EVENT = "MESSAGE_EVENT";
     public static final String MESSAGE_KEY = "MESSAGE_EXTRA";
+
+    public static final int RC_BARCODE_CAPTURE = 9001;
+
+    private Fragment activeFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,24 +74,28 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
     public void onNavigationDrawerItemSelected(int position) {
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment nextFragment;
+        //Fragment nextFragment;
 
         switch (position){
             default:
             case 0:
-                nextFragment = new ListOfBooks();
+                activeFragment = new ListOfBooks();
                 break;
             case 1:
-                nextFragment = new AddBook();
+                Bundle bundle = new Bundle();
+                bundle.putString(AddBook.ADD_BOOK_FRAGMENT_BARCODE_CAPTURE, String.valueOf(RC_BARCODE_CAPTURE));
+
+                activeFragment = new AddBook();
+                activeFragment.setArguments(bundle);
                 break;
             case 2:
-                nextFragment = new About();
+                activeFragment = new About();
                 break;
 
         }
 
         fragmentManager.beginTransaction()
-                .replace(R.id.container, nextFragment)
+                .replace(R.id.container, activeFragment)
                 .addToBackStack((String) title)
                 .commit();
     }
@@ -151,6 +165,15 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
     }
 
+    @Override
+    public void StartBarcodeActivity(int nIntent, boolean bUseFlash, boolean bAutoFocus) {
+        Intent intent = new Intent(this, BarcodeCaptureActivity.class);
+        intent.putExtra(BarcodeCaptureActivity.AutoFocus, true);
+        intent.putExtra(BarcodeCaptureActivity.UseFlash, true);
+
+        startActivityForResult(intent, nIntent);
+    }
+
     private class MessageReciever extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -178,5 +201,61 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         super.onBackPressed();
     }
 
+
+    /**
+     * Called when an activity you launched exits, giving you the requestCode
+     * you started it with, the resultCode it returned, and any additional
+     * data from it.  The <var>resultCode</var> will be
+     * {@link #RESULT_CANCELED} if the activity explicitly returned that,
+     * didn't return any result, or crashed during its operation.
+     * <p/>
+     * <p>You will receive this call immediately before onResume() when your
+     * activity is re-starting.
+     * <p/>
+     *
+     * @param requestCode The integer request code originally supplied to
+     *                    startActivityForResult(), allowing you to identify who this
+     *                    result came from.
+     * @param resultCode  The integer result code returned by the child activity
+     *                    through its setResult().
+     * @param data        An Intent, which can return result data to the caller
+     *                    (various data can be attached to Intent "extras").
+     * @see #startActivityForResult
+     * @see #createPendingResult
+     * @see #setResult(int)
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        int aa = resultCode;
+        int bb = requestCode;
+
+        if (requestCode == RC_BARCODE_CAPTURE) {
+            if(!(activeFragment instanceof AddBook)){
+                return;
+            }
+
+            if (resultCode == CommonStatusCodes.SUCCESS) {
+                if (data != null) {
+                    Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
+                    ((AddBook)activeFragment).SetIsbn(barcode.displayValue, R.string.barcode_success, true);
+                    //statusMessage.setText(R.string.barcode_success);
+                    //barcodeValue.setText(barcode.displayValue);
+                    //Log.d(TAG, "Barcode read: " + barcode.displayValue);
+                } else {
+                    //statusMessage.setText(R.string.barcode_failure);
+                    //Log.d(TAG, "No barcode captured, intent data is null");
+                    ((AddBook)activeFragment).SetIsbn("", R.string.barcode_failure, false);
+                }
+            } else {
+                //statusMessage.setText(String.format(getString(R.string.barcode_error),
+                //        CommonStatusCodes.getStatusCodeString(resultCode)));
+                ((AddBook)activeFragment).SetIsbn("", R.string.barcode_error, false);
+            }
+        }
+        else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
 
 }
