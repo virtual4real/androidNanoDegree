@@ -3,6 +3,7 @@ package it.jaschke.alexandria;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -102,6 +103,16 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
                 //when you're done, remove the toast below.
                 try {
                     if(!(getActivity() instanceof IBarcodeActivity)){
+                        return;
+                    }
+
+                    //verify if camera is available if not send a message and not start the next activity
+
+
+                    PackageManager pm = getContext().getPackageManager();
+
+                    if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+                        BookService.sendErrorMessage(getContext(), getResources().getString(R.string.camera_not_ready));
                         return;
                     }
 

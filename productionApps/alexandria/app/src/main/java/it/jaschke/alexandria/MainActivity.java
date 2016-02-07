@@ -227,9 +227,6 @@ public class MainActivity extends ActionBarActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        int aa = resultCode;
-        int bb = requestCode;
-
         if (requestCode == RC_BARCODE_CAPTURE) {
             if(!(activeFragment instanceof AddBook)){
                 return;

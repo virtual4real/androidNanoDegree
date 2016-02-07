@@ -2,6 +2,7 @@ package it.jaschke.alexandria.services;
 
 import android.app.IntentService;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -66,13 +67,19 @@ public class BookService extends IntentService {
         }
     }
 
+    public static void sendErrorMessage(Context ctx, String sMessage){
+        Intent messageIntent = new Intent(MainActivity.MESSAGE_EVENT);
+        messageIntent.putExtra(MainActivity.MESSAGE_KEY, sMessage);
+        LocalBroadcastManager.getInstance(ctx).sendBroadcast(messageIntent);
+    }
+
     /**
      * Handle action fetchBook in the provided background thread with the provided
      * parameters.
      */
     private void fetchBook(String ean) {
 
-        if(ean.length()!=13){
+        if(ean.length() < 13){
             return;
         }
 
@@ -130,6 +137,10 @@ public class BookService extends IntentService {
             bookJsonString = buffer.toString();
         } catch (Exception e) {
             Log.e(LOG_TAG, "Error ", e);
+            //TODO: check internet connection before calling the api ... maybe
+            BookService.sendErrorMessage(getApplicationContext(), getResources().getString(R.string.no_connection));
+            return;
+
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -159,16 +170,26 @@ public class BookService extends IntentService {
         try {
             JSONObject bookJson = new JSONObject(bookJsonString);
             JSONArray bookArray;
-            if(bookJson.has(ITEMS)){
-                bookArray = bookJson.getJSONArray(ITEMS);
-            }else{
-                Intent messageIntent = new Intent(MainActivity.MESSAGE_EVENT);
-                messageIntent.putExtra(MainActivity.MESSAGE_KEY,getResources().getString(R.string.not_found));
-                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(messageIntent);
+            if(!bookJson.has(ITEMS)){
+                BookService.sendErrorMessage(getApplicationContext(), getResources().getString(R.string.not_found));
+                return;
+            }
+
+            bookArray = bookJson.getJSONArray(ITEMS);
+
+            //if no books found
+            if(0 == bookArray.length()){
+                BookService.sendErrorMessage(getApplicationContext(), getResources().getString(R.string.invalid_answer));
                 return;
             }
 
             JSONObject bookInfo = ((JSONObject) bookArray.get(0)).getJSONObject(VOLUME_INFO);
+
+            //if no data in the book info
+            if (null == bookInfo){
+                BookService.sendErrorMessage(getApplicationContext(), getResources().getString(R.string.not_found));
+                return;
+            }
 
             String title = bookInfo.getString(TITLE);
 

@@ -746,7 +746,7 @@ public class CameraSource {
         // setting mFocusMode to the one set in the params
         mFocusMode = parameters.getFocusMode();
 
-        if (mFlashMode != null) {
+        if (mFlashMode != null && null != parameters.getSupportedFlashModes()) {
             if (parameters.getSupportedFlashModes().contains(
                     mFlashMode)) {
                 parameters.setFlashMode(mFlashMode);
