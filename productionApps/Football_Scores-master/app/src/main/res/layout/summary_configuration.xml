@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical">
+
+<TextView android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/widget_summary_configuration_text"
+        android:textAlignment="textStart"
+        android:layout_gravity="start"
+        android:contentDescription="@string/widget_summary_configuration_description"/>
+
+<RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="20dp"
+    android:layout_gravity="start"
+    android:textAlignment="textStart"
+    android:orientation="vertical">
+        <RadioButton android:id="@+id/radio_premiere"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/radio_premire_league_title"
+            android:onClick="onRadioButtonClicked"/>
+        <RadioButton android:id="@+id/radio_serie_a"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/radio_serie_a_title"
+            android:onClick="onRadioButtonClicked"/>
+        <RadioButton android:id="@+id/radio_bundesliga_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/radio_bundesliga_1_title"
+            android:onClick="onRadioButtonClicked"/>
+        <RadioButton android:id="@+id/radio_bundesliga_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/radio_bundesliga_2_title"
+            android:onClick="onRadioButtonClicked"/>
+        <RadioButton android:id="@+id/radio_primera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/radio_primera_division_title"
+            android:onClick="onRadioButtonClicked"/>
+</RadioGroup>
+
+
+
+<Button android:id="@+id/save_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@android:string/ok"
+        android:contentDescription="@android:string/ok"/>
+
+</LinearLayout>
