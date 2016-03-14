@@ -201,7 +201,8 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
         }
 
         String imgUrl = data.getString(data.getColumnIndex(AlexandriaContract.BookEntry.IMAGE_URL));
-        if(null != imgUrl) {
+        if(null != imgUrl)
+        {
             if (Patterns.WEB_URL.matcher(imgUrl).matches()) {
                 new DownloadImage((ImageView) rootView.findViewById(R.id.bookCover)).execute(imgUrl);
                 rootView.findViewById(R.id.bookCover).setVisibility(View.VISIBLE);
