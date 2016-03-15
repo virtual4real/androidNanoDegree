@@ -50,4 +50,6 @@
     <string name="widget_summary_configuration_text">Please choose a league</string>
     <string name="title_widget_detail">Detail Widget</string>
     <string name="appwidget_detail_no_data">No matches information available</string>
+
+    <string name="desc_share">Share the match results</string>
 </resources>
