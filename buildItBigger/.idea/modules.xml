@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/buildItBigger.iml" filepath="$PROJECT_DIR$/buildItBigger.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jokesEngineGenerator/jokesEngineGenerator.iml" filepath="$PROJECT_DIR$/jokesEngineGenerator/jokesEngineGenerator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/virtual4real.builditbigger.jokefactory/virtual4real.builditbigger.jokefactory.iml" filepath="$PROJECT_DIR$/virtual4real.builditbigger.jokefactory/virtual4real.builditbigger.jokefactory.iml" />
     </modules>
   </component>
 </project>

@@ -1,11 +1,15 @@
 package com.udacity.gradle.builditbigger;
 
+import android.content.Context;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -40,7 +44,9 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void tellJoke(View view){
-        Toast.makeText(this, "derp", Toast.LENGTH_SHORT).show();
+        int nPos = ThreadLocalRandom.current().nextInt(1, 20);
+        new JokeEndpointAsyncTask().execute(new Pair<Context, String>(this, Integer.toString(nPos)));
+        //Toast.makeText(this, "derp", Toast.LENGTH_SHORT).show();
     }
 
 
