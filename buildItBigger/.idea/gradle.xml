@@ -10,6 +10,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/builditbigger.showjoke" />
             <option value="$PROJECT_DIR$/jokesEngineGenerator" />
             <option value="$PROJECT_DIR$/virtual4real.builditbigger.jokefactory" />
           </set>
@@ -18,6 +19,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/builditbigger.showjoke" />
             <option value="$PROJECT_DIR$/jokesEngineGenerator" />
             <option value="$PROJECT_DIR$/virtual4real.builditbigger.jokefactory" />
           </set>

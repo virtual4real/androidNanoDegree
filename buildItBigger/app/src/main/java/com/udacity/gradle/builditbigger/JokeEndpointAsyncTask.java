@@ -64,9 +64,7 @@ public class JokeEndpointAsyncTask extends AsyncTask<Pair<Context, String>, Void
     protected void onPostExecute(String result) {
         if (this.mListener != null)
             this.mListener.onComplete(result, mError);
-        else {
-            Toast.makeText(context, result, Toast.LENGTH_LONG).show();
-        }
+
     }
 
 

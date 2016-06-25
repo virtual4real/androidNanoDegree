@@ -1,1 +1,1 @@
-include ':app', ':virtual4real.builditbigger.jokefactory', ':jokesEngineGenerator'
+include ':app', ':virtual4real.builditbigger.jokefactory', ':jokesEngineGenerator', ':builditbigger.showjoke'
