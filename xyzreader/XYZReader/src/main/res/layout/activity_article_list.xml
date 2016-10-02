@@ -32,7 +32,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
-                android:background="@color/theme_primary"
+                android:background="@color/primary"
                 app:popupTheme="@style/ThemeOverlay.AppCompat.Dark" />
 
 
