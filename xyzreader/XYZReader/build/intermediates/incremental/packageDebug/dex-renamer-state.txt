@@ -1,7 +1,0 @@
-#Sun Oct 02 16:20:10 CEST 2016
-base.0=/Users/ioanagosman/Projects/android/git_it/androidNanoDegree/xyzreader/XYZReader/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run_0807135e727bd2304e2fc0f677caf09816e7669e
-renamed.1=classes.dex
-renamed.0=classes2.dex
-file.1=/Users/ioanagosman/Projects/android/git_it/androidNanoDegree/xyzreader/XYZReader/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run-bootstrap_f66cc7f031b411440c5721ae4372cc0c2e1a1e8a/classes.dex
-base.1=/Users/ioanagosman/Projects/android/git_it/androidNanoDegree/xyzreader/XYZReader/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run-bootstrap_f66cc7f031b411440c5721ae4372cc0c2e1a1e8a
-file.0=/Users/ioanagosman/Projects/android/git_it/androidNanoDegree/xyzreader/XYZReader/build/intermediates/transforms/dex/debug/folders/1000/10/instant-run_0807135e727bd2304e2fc0f677caf09816e7669e/classes.dex
