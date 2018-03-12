@@ -2,8 +2,8 @@
     <string name="app_name">Popular Movies</string>
 
 
-    <string name="default_max_date">20170101</string>
-    <string name="default_min_date">19100101</string>
+    <string name="default_max_date">2019-01-01</string>
+    <string name="default_min_date">1910-01-01</string>
     <string name="default_min_votes">10</string>
     <string name="default_adult">false</string>
     <string name="default_video">true</string>

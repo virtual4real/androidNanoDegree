@@ -396,6 +396,7 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
 
         LinearLayoutManager manager = (LinearLayoutManager) mRecyclerView.getLayoutManager();
         manager.scrollToPositionWithOffset(mScrollFirstItem, (int) mScrollTopOffset);
+        manager.setMeasurementCacheEnabled(false);
 
         mScrollFirstItem = 0;
         mScrollTopOffset = 0;
@@ -444,6 +445,7 @@ public class MovieSummaryFragment extends Fragment implements LoaderManager.Load
         mScrollFirstItem = manager.findFirstVisibleItemPosition();
         View firstItemView = manager.findViewByPosition(mScrollFirstItem);
         mScrollTopOffset = firstItemView.getTop();
+        manager.setMeasurementCacheEnabled(false);
     }
 
 

@@ -81,7 +81,7 @@ public class DatePreference extends DialogPreference {
     private String getStorageString() {
         String s = String.valueOf(month);
         String d = String.valueOf(day);
-        return String.valueOf(year) + (1 == s.length() ? "0" + s : s) +
+        return String.valueOf(year) + '-' + (1 == s.length() ? "0" + s : s) + '-' +
                 (1 == d.length() ? "0" + d : d);
 
     }

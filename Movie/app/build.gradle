@@ -1,14 +1,14 @@
+//noinspection GradleCompatible
 apply plugin: 'com.android.application'
-apply plugin: 'com.neenbedankt.android-apt'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion '23.0.0'
+    compileSdkVersion 24
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         applicationId "com.virtual4real.moviemanager"
         minSdkVersion 16
-        targetSdkVersion 23
+        targetSdkVersion 24
         versionCode 1
         versionName "1.0"
     }
@@ -29,17 +29,25 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
 
     compile 'net.simonvt.schematic:schematic:0.6.3'
+
+    annotationProcessor 'net.simonvt.schematic:schematic-compiler:0.6.3'
     compile 'net.simonvt.schematic:schematic-compiler:0.6.3'
 
-    compile 'com.android.support:appcompat-v7:23.1.0'
-    compile 'com.android.support:cardview-v7:23.1.0'
-    compile 'com.android.support:support-v4:23.1.0'
-    compile 'com.android.support:recyclerview-v7:23.1.0'
+
+    compile 'com.android.support:appcompat-v7:23.4.0'
+    compile 'com.android.support:cardview-v7:23.4.0'
+    compile 'com.android.support:support-v4:23.4.0'
+    compile 'com.android.support:recyclerview-v7:23.4.0'
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.android.support:design:23.1.0'
+    compile 'com.android.support:design:23.4.0'
     compile 'com.squareup.okhttp:okhttp:2.4.0'
     compile 'com.squareup.okhttp:okhttp-urlconnection:1.6.0'
+
+    annotationProcessor 'com.jakewharton:butterknife:7.0.1'
     compile 'com.jakewharton:butterknife:7.0.1'
+
+    compile 'com.google.dagger:dagger:2.0'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.0'
 }
 
